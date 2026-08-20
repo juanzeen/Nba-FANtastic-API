@@ -1,0 +1,23 @@
+[project]
+name = "nba-fantastic-api"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "juanzeen", email = "jziignerdev@gmail.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "dotenv>=0.9.9",
+    "nba-api>=1.11.4",
+    "openpyxl>=3.1.5",
+    "pandas>=3.0.5",
+    "pymongo>=4.17.0",
+]
+
+[project.scripts]
+nba-fantastic-api = "nba_fantastic_api:main"
+
+[build-system]
+requires = ["uv_build>=0.12.5,<0.13.0"]
+build-backend = "uv_build"
