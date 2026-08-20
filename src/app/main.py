@@ -1,4 +1,5 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
+from typing import Annotated
 from pymongo import AsyncMongoClient
 import os
 import dotenv
@@ -35,16 +36,25 @@ async def get_historical_player_by_id(id: int):
     print(player)
     if player:
         return {
-            "player": player.full_name,
+            "player": player,
             "message": "Player successfully retrieved.",
             "status": 200,
         }
     return {"message": f"Player with {id} not found.", "status": 404}
 
+
 @app.get("/historical-players/")
-async def get_historical_player_by_name(name: str):
+async def get_historical_player_by_name(
+    name: Annotated[str, Query(min_length=2, description="Player name to search for. Can be used with last_name or with hyphen to search for the full name. Eg: 'LeBron' or 'LeBron-James'")],
+    last_name: Annotated[
+        str,
+        Query(
+            description="Expected be used for specific cases and must be used with capitalized letter at the start of the last name. Eg: 'James"
+        ),
+    ] = "",
+):
     hp = db["historical_players"]
-    formatted_player_name = format_player_name(name)
+    formatted_player_name = format_player_name(name, last_name)
     player = await hp.find_one({"full_name": formatted_player_name})
     if player:
         return {
