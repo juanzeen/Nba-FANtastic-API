@@ -125,7 +125,6 @@ uv run fastapi dev src/app/main.py
 ```text
 Nba-FANtastic-API/
 ├── docker-compose.yaml      # Docker Compose configuration for local MongoDB
-├── init/                    # MongoDB initialization scripts
 ├── seed/                    # Data ingestion, seeding scripts, and datasets
 │   ├── extractor.py
 │   ├── nba_legends.csv
