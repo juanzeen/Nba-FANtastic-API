@@ -8,9 +8,8 @@ import dotenv
 
 
 def populate_historical_players():
-    # Load environment variables from .env file
     dotenv.load_dotenv()
-    db_url = os.getenv("MONGO_URL")
+    db_url = os.getenv("LOCAL_MONGO_URL")
     db_name = os.getenv("DATABASE_NAME", "nba_fantastic")
     client = MongoClient(db_url)
     db = client[db_name]
@@ -73,13 +72,12 @@ def populate_historical_players():
                 "seasons": [],
             }
 
-            # 5. Salva no MongoDB usando Upsert (se já existir, atualiza; se não, cria)
             collection.update_one({"_id": player_id}, {"$set": document}, upsert=True)
 
-            print(f"🚀 Documento salvo no MongoDB: {full_name}")
+            print(f"Documento salvo no MongoDB: {full_name}")
 
         except Exception as e:
-            print(f"⚠️ Erro ao processar {full_name} para o Mongo: {e}")
+            print(f"Erro ao processar {full_name} para o Mongo: {e}")
             continue
 
 
@@ -238,7 +236,7 @@ def fix_seasons_structure():
         updated_count += 1
 
     print(
-        f"\n✨ Sucesso! {updated_count} jogadores tiveram suas temporadas corrigidas e limpas de valores NaN."
+        f"\nSucesso! {updated_count} jogadores tiveram suas temporadas corrigidas e limpas de valores NaN."
     )
 
 
