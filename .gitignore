@@ -220,3 +220,8 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# bsons from mongodb
+dump
+dump/
+dump/*
