@@ -26,7 +26,7 @@ def clean_float(val, default: float = 0.0, decimals: int = 1) -> float:
         if math.isnan(f) or math.isinf(f):
             return default
         return round(f, decimals) if decimals is not None else f
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         return default
 
 
@@ -39,7 +39,7 @@ def clean_int(val, default: int = 0) -> int:
         if math.isnan(f) or math.isinf(f):
             return default
         return int(f)
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         return default
 
 
@@ -94,11 +94,21 @@ def normalize_season_item(season_item: dict) -> dict:
 
     averages = data.get("averages")
     if isinstance(averages, dict):
-        pts = averages.get("pts", averages.get("pts_avg", data.get("pts_avg", data.get("pts", 0))))
-        ast = averages.get("ast", averages.get("ast_avg", data.get("ast_avg", data.get("ast", 0))))
-        reb = averages.get("reb", averages.get("reb_avg", data.get("reb_avg", data.get("reb", 0))))
-        blk = averages.get("blk", averages.get("blk_avg", data.get("blk_avg", data.get("blk", 0))))
-        stl = averages.get("stl", averages.get("stl_avg", data.get("stl_avg", data.get("stl", 0))))
+        pts = averages.get(
+            "pts", averages.get("pts_avg", data.get("pts_avg", data.get("pts", 0)))
+        )
+        ast = averages.get(
+            "ast", averages.get("ast_avg", data.get("ast_avg", data.get("ast", 0)))
+        )
+        reb = averages.get(
+            "reb", averages.get("reb_avg", data.get("reb_avg", data.get("reb", 0)))
+        )
+        blk = averages.get(
+            "blk", averages.get("blk_avg", data.get("blk_avg", data.get("blk", 0)))
+        )
+        stl = averages.get(
+            "stl", averages.get("stl_avg", data.get("stl_avg", data.get("stl", 0)))
+        )
     else:
         pts = data.get("pts_avg", data.get("pts", 0))
         ast = data.get("ast_avg", data.get("ast", 0))
@@ -128,7 +138,9 @@ def populate_historical_players():
     collection = get_db_collection("historical_players")
 
     df_legends = pd.read_csv(file_path)
-    print(f"Starting migration of {len(df_legends)} legends to MongoDB ({file_path})...")
+    print(
+        f"Starting migration of {len(df_legends)} legends to MongoDB ({file_path})..."
+    )
 
     for _, row in df_legends.iterrows():
         player_id = clean_int(row.get("Player ID"))
@@ -223,11 +235,31 @@ def populate_historical_players_seasons():
             if not player_info.empty:
                 for _, row in player_info.iterrows():
                     gp = clean_int(row.get("GP"), default=0)
-                    pts = (row["PTS"] / gp) if gp > 0 and "PTS" in row and pd.notna(row["PTS"]) else 0.0
-                    ast = (row["AST"] / gp) if gp > 0 and "AST" in row and pd.notna(row["AST"]) else 0.0
-                    reb = (row["REB"] / gp) if gp > 0 and "REB" in row and pd.notna(row["REB"]) else 0.0
-                    blk = (row["BLK"] / gp) if gp > 0 and "BLK" in row and pd.notna(row["BLK"]) else 0.0
-                    stl = (row["STL"] / gp) if gp > 0 and "STL" in row and pd.notna(row["STL"]) else 0.0
+                    pts = (
+                        (row["PTS"] / gp)
+                        if gp > 0 and "PTS" in row and pd.notna(row["PTS"])
+                        else 0.0
+                    )
+                    ast = (
+                        (row["AST"] / gp)
+                        if gp > 0 and "AST" in row and pd.notna(row["AST"])
+                        else 0.0
+                    )
+                    reb = (
+                        (row["REB"] / gp)
+                        if gp > 0 and "REB" in row and pd.notna(row["REB"])
+                        else 0.0
+                    )
+                    blk = (
+                        (row["BLK"] / gp)
+                        if gp > 0 and "BLK" in row and pd.notna(row["BLK"])
+                        else 0.0
+                    )
+                    stl = (
+                        (row["STL"] / gp)
+                        if gp > 0 and "STL" in row and pd.notna(row["STL"])
+                        else 0.0
+                    )
 
                     season_data = build_season_dict(
                         season_year=row.get("SEASON_ID"),
@@ -269,7 +301,9 @@ def fix_seasons_structure():
         if not isinstance(old_seasons, list):
             old_seasons = []
 
-        new_seasons = [normalize_season_item(season_item) for season_item in old_seasons]
+        new_seasons = [
+            normalize_season_item(season_item) for season_item in old_seasons
+        ]
 
         collection.update_one({"_id": player_id}, {"$set": {"seasons": new_seasons}})
         updated_count += 1

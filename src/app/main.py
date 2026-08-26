@@ -6,8 +6,9 @@ app = FastAPI()
 
 app.include_router(historical_players.router)
 
+
 @app.get("/", status_code=200)
-async def health_check(client = Depends(get_client)):
+async def health_check(client=Depends(get_client)):
     health_status = {
         "status": "healthy",
         "services": {"api": "healthy", "database": "unknown"},

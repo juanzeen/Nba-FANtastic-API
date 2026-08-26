@@ -5,6 +5,7 @@ from ..utils.strings import format_player_name
 
 router = APIRouter(prefix="/historical-players", tags=["Historical Players"])
 
+
 @router.get("/", status_code=200)
 async def get_historical_players(
     name: Annotated[
@@ -20,10 +21,9 @@ async def get_historical_players(
             description="Expected to be used for specific cases with capitalized last name. Eg: 'James'"
         ),
     ] = "",
-    db=Depends(get_db)
+    db=Depends(get_db),
 ):
     hp = db["historical_players"]
-
 
     if name:
         formatted_player_name = format_player_name(name, last_name)
@@ -32,7 +32,9 @@ async def get_historical_players(
         if not player:
             raise HTTPException(
                 status_code=404,
-                detail={"message": f"Player with name {formatted_player_name} not found."},
+                detail={
+                    "message": f"Player with name {formatted_player_name} not found."
+                },
             )
 
         return {
