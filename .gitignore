@@ -159,7 +159,6 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-*.csv
 
 # Spyder project settings
 .spyderproject
@@ -220,3 +219,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+#.dump from mongodb
+dump
+dump/
+dump/*

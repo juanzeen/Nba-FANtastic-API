@@ -9,7 +9,6 @@ import os
 def is_legendary_player(
     points, rebs, asts, mvp_count, all_star_participations, finals_mvp_count, min_games
 ) -> bool:
-    # Ajustado conforme sua lógica
     volume_conditions = (
         points >= 25000 or rebs >= 8000 or asts >= 7000
     ) and min_games >= 460
@@ -107,7 +106,7 @@ def extract_legendary_players():
                     f.flush()
 
             except Exception as e:
-                print(f"⚠️ Erro ao processar {name}: {e}")
+                print(f"Erro ao processar {name}: {e}")
                 continue
 
 
@@ -265,7 +264,7 @@ def update_all_players_career_data():
             df.at[idx, "Total Seasons"] = total_seasons
             df.at[idx, "Career Span"] = career_span
 
-            print(f"✅ Atualizado: {full_name} ({career_span} | {total_seasons} temps)")
+            print(f"Atualizado: {full_name} ({career_span} | {total_seasons} temps)")
             time.sleep(1.5)
 
         except Exception as e:
@@ -275,7 +274,7 @@ def update_all_players_career_data():
     # Salva o arquivo final com a estrutura completa
     df.to_csv("nba_legends_normalized.csv", index=False)
     print(
-        f"\n🎯 Sucesso! O arquivo '{file_name}' foi atualizado contemplando todas as colunas."
+        f"\nSucesso! O arquivo '{file_name}' foi atualizado contemplando todas as colunas."
     )
 
 
@@ -371,11 +370,11 @@ def update_legends_data():
                 }
             )
 
-            print(f"✅ Atualizado: {full_name}")
+            print(f"Atualizado: {full_name}")
             time.sleep(1.5)
 
         except Exception as e:
-            print(f"⚠️ Erro ao atualizar {full_name}: {e}")
+            print(f"Erro ao atualizar {full_name}: {e}")
             updated_legends.append(row_data.to_dict())
             continue
 
@@ -383,7 +382,7 @@ def update_legends_data():
         df_new = pd.DataFrame(updated_legends)
         df_new.to_csv(file_name, index=False)
         print(
-            f"\n✨ Sucesso! O arquivo '{file_name}' foi totalmente atualizado com as novas estatísticas e picos."
+            f"\nSucesso! O arquivo '{file_name}' foi totalmente atualizado com as novas estatísticas e picos."
         )
 
 

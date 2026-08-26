@@ -1,8 +1,9 @@
 from httpx import ASGITransport, AsyncClient
-from unittest.mock import patch, AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock
 from starlette.testclient import TestClient as TestClient
 import pytest
-from app.main import app, get_client, get_db
+from ..main import app
+from ..dependencies import get_client, get_db
 
 client = TestClient(app)
 
@@ -57,7 +58,7 @@ async def test_get_historical_players():
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
-        response = await ac.get("/historical-players")
+        response = await ac.get("/historical-players/")
         players = response.json().get("players", [])
         message = response.json().get("message", "")
     app.dependency_overrides.clear()
@@ -76,7 +77,7 @@ async def test_fail_get_historical_players():
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
-        response = await ac.get("/historical-players")
+        response = await ac.get("/historical-players/")
         players = response.json().get("players", [])
         message = response.json().get("detail", "").get("message", "")
     app.dependency_overrides.clear()
@@ -121,7 +122,7 @@ async def test_fail_get_historical_player_by_id():
         message = response.json().get("detail", "").get("message", "")
     app.dependency_overrides.clear()
     assert response.status_code == 404
-    assert message == "Player with 1 not found."
+    assert message == "Player with id 1 not found."
 
 
 @pytest.mark.anyio
