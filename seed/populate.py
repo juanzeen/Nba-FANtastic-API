@@ -3,6 +3,7 @@ import os
 import time
 import dotenv
 import pandas as pd
+import numpy as np
 from pymongo import MongoClient
 from nba_api.stats.endpoints import playercareerstats
 
@@ -137,9 +138,7 @@ def populate_historical_players():
         return
     collection = get_db_collection("historical_players")
 
-    #df_legends = pd.read_csv(file_path)
-    #adding missed historical players
-    df_legends = pd.read_csv(file_path).tail(6)
+    df_legends = pd.read_csv(file_path)
     print(
         f"Starting migration of {len(df_legends)} legends to MongoDB ({file_path})..."
     )
@@ -219,9 +218,7 @@ def populate_historical_players_seasons():
         return
     collection = get_db_collection("historical_players")
 
-    #df_legends = pd.read_csv(file_path)
-    #adding missed historical players
-    df_legends = pd.read_csv(file_path).tail(6)
+    df_legends = pd.read_csv(file_path)
     players = df_legends["Player ID"].dropna().unique().tolist()
     print(f"Starting season updates for {len(players)} players...")
 
@@ -316,6 +313,7 @@ def fix_seasons_structure():
         f"\nSuccess! {updated_count} players had their seasons corrected and cleaned of NaN values."
     )
 
+
 def populate_historical_records():
     collection = get_db_collection("historical_records")
 
@@ -323,7 +321,7 @@ def populate_historical_records():
     if not os.path.exists(csv):
         print("CSV not found")
         return
-    df_records = pd.read_csv(csv)
+    df_records = pd.read_csv(csv).replace({np.nan: None})
 
     for _, row in df_records.iterrows():
         category = row.get("category")
@@ -333,18 +331,19 @@ def populate_historical_records():
                 "value": row.get("value"),
                 "leader_id": row.get("leader_id"),
                 "leader_full_name": row.get("leader_full_name"),
-                "is_active": True if row.get("active") == "Y"  else False,
+                "is_active": True if row.get("active") == "Y" else False,
                 "details": {
-                    "season": row.get("season") if not pd.isna(row.get("season")) else "",
-                    "team": row.get("team") if not pd.isna(row.get("team")) else ""
-                }
+                    "season": row.get("season", None),
+                    "team": row.get("team", None)
+                },
             }
-            collection.insert_one(document)
+            collection.update_one({"record": category},{"$set": document}, upsert=True)
             print(f"Document for the record {category} was successfully inserted")
         except Exception as e:
             print(f"Errow while trying to populate the db {e}")
     return
 
 
-populate_historical_players()
-populate_historical_players_seasons()
+#populate_historical_players()
+#populate_historical_players_seasons()
+populate_historical_records()

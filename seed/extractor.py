@@ -114,7 +114,6 @@ def extract_legendary_players():
                 print(f"Erro ao processar {name}: {e}")
                 continue
 
-
     file_name = "nba_legends.csv"
     if not pd.io.common.file_exists(file_name):
         print("Arquivo nba_legends.csv não encontrado!")
@@ -221,6 +220,7 @@ def extract_legendary_players():
             f"\nSucesso! O arquivo '{file_name}' foi totalmente atualizado com as novas estatísticas e picos."
         )
 
+
 def update_legends_career_data(file_name="nba_legends.csv"):
     """
     Centralized function to update NBA legends data with complete career statistics,
@@ -231,8 +231,7 @@ def update_legends_career_data(file_name="nba_legends.csv"):
         return
 
     df = pd.read_csv(file_name)
-    #all_player_ids = df["Player ID"].tolist()
-    all_player_ids =  [76631, 926, 101, 78188, 77246, 383]
+    all_player_ids = df["Player ID"].tolist()
 
     print(
         f"Iniciando a atualização completa para {len(all_player_ids)} jogadores a partir de '{file_name}'..."
@@ -273,7 +272,6 @@ def update_legends_career_data(file_name="nba_legends.csv"):
                 f"{df_career['SEASON_ID'].min()} - {df_career['SEASON_ID'].max()}"
             )
 
-
             total_games = int(df_career["GP"].sum())
             total_points = int(df_career["PTS"].sum())
             total_rebs = int(df_career["REB"].sum())
@@ -281,15 +279,13 @@ def update_legends_career_data(file_name="nba_legends.csv"):
             total_stl = int(df_career["STL"].sum())
             total_blk = int(df_career["BLK"].sum())
 
-            season_mvps = len(df_awards[df_awards["DESCRIPTION"] == "NBA Most Valuable Player"])
+            season_mvps = len(
+                df_awards[df_awards["DESCRIPTION"] == "NBA Most Valuable Player"]
+            )
             finals_mvps = len(
-                                df_awards[
-                                    df_awards["DESCRIPTION"] == "NBA Finals Most Valuable Player"
-                                ]
-                            )
-            all_star_apps = len(
-                                df_awards[df_awards["DESCRIPTION"] == "NBA All-Star"]
-                            )
+                df_awards[df_awards["DESCRIPTION"] == "NBA Finals Most Valuable Player"]
+            )
+            all_star_apps = len(df_awards[df_awards["DESCRIPTION"] == "NBA All-Star"])
 
             df_career["PPG"] = df_career["PTS"] / df_career["GP"]
             df_career["APG"] = df_career["AST"] / df_career["GP"]
@@ -358,34 +354,6 @@ def update_legends_career_data(file_name="nba_legends.csv"):
     )
 
 
-# def get_players_position():
-#     file_name = "nba_legends.csv"
-
-#     if not pd.io.common.file_exists(file_name):
-#         print(f"Arquivo {file_name} não encontrado.")
-#         return
-
-#     df = pd.read_csv(file_name)
-#     players_id = df["Player ID"].to_list()
-#     print(players_id)
-#     for player_id in players_id:
-#         try:
-#             info = commonplayerinfo.CommonPlayerInfo(player_id=player_id)
-#             df_info = info.get_data_frames()[0]
-
-#             if not df_info.empty and "POSITION" in df_info.columns:
-#                 position = df_info["POSITION"].iloc[0]
-
-#             if pd.notna(position) and position != "":
-#                 idx = df[df["Player ID"].astype(str) == str(player_id)].index[0]
-#                 df.at[idx, "Position"] = position
-
-#         except Exception as e:
-#             print(f"Erro ao buscar posição para o ID {player_id}: {e}")
-#         time.sleep(1)
-#     df.to_csv("legends_with_position.csv", index=False)
-
-
 def get_all_time_leaders():
     endpoints = [
         alltimeleadersgrids.AllTimeLeadersGrids().ast_leaders,
@@ -413,5 +381,6 @@ def get_all_time_leaders():
         except Exception as e:
             print(e)
     pd.DataFrame(leaders).to_csv("all_time_leaders.csv", index=False)
+
 
 update_legends_career_data()
