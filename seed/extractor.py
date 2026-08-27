@@ -23,6 +23,12 @@ def is_legendary_player(
     return volume_conditions or peak_conditions
 
 
+def convert_to_cm(fi: str) -> float:
+    feet, inch = fi.split("-")
+    height_cm = round((int(feet) * 30.48) + (int(inch) * 2.54))
+    return height_cm
+
+
 def extract_legendary_players():
     file_name = "nba_legends.csv"
     headers = [
@@ -383,4 +389,116 @@ def get_all_time_leaders():
     pd.DataFrame(leaders).to_csv("all_time_leaders.csv", index=False)
 
 
-update_legends_career_data()
+def extract_current_nba_players():
+    all_players_data = players.get_players()
+    active_players = [p for p in all_players_data if p["is_active"]]  # 530 players
+    file_name = "nba_players.csv"
+    headers = [
+        "ID",
+        "Full Name",
+        "Country",
+        "Weight",
+        "Height",
+        "Position",
+        "Team Abbreviation",
+        "Team Full Name",
+        "Total Games",
+        "Total Points",
+        "Total Assists",
+        "Total Rebounds",
+        "Total Blocks",
+        "Total Steals",
+        "Avg Points",
+        "Avg Rebounds",
+        "Avg Assists",
+        "Avg Blocks",
+        "Avg Steals",
+        "Season Games",
+        "Season Points",
+        "Season Assists",
+        "Season Rebounds",
+        "Season Blocks",
+        "Season Steals",
+        "Season Avg Points",
+        "Season Avg Rebounds",
+        "Season Avg Assists",
+        "Season Avg Blocks",
+        "Season Avg Steals",
+    ]
+    with open(file_name, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=headers)
+        if not os.path.isfile(file_name):
+            writer.writeheader()
+        for p in active_players:
+            id = p.get("id")
+            full_name = p.get("full_name")
+            try:
+                common_df = commonplayerinfo.CommonPlayerInfo(
+                    player_id=p.get("id")
+                ).get_data_frames()[0]
+                is_nba_active = (
+                    True if common_df["ROSTERSTATUS"].iloc[0] == "Active" else False
+                )
+                if is_nba_active:
+                    print(f"Extracting {full_name} with ID: {id}")
+                    p_pos = common_df["POSITION"].iloc[0]
+                    # TODO add these stats to historical players
+                    p_country = common_df["COUNTRY"].iloc[0]
+                    p_height = convert_to_cm(common_df["HEIGHT"].iloc[0])
+                    p_weight = round(int(common_df["WEIGHT"].iloc[0]) / 2.205, 2)
+                    # TODO
+                    team_abb = common_df["TEAM_ABBREVIATION"].iloc[0]
+                    team_full_name = f"{common_df['TEAM_CITY'].iloc[0]} {common_df['TEAM_NAME'].iloc[0]}"
+                    career_df = playercareerstats.PlayerCareerStats(
+                        player_id=p.get("id")
+                    ).get_data_frames()[0]
+                    total_games = int(career_df["GP"].sum())
+                    total_points = int(career_df["PTS"].sum())
+                    total_assists = int(career_df["AST"].sum())
+                    total_rebounds = int(career_df["REB"].sum())
+                    total_steals = int(career_df["STL"].sum())
+                    total_blocks = int(career_df["BLK"].sum())
+                    avg_points = round(total_points / total_games, 1)
+                    avg_assists = round(total_assists / total_games, 1)
+                    avg_rebounds = round(total_rebounds / total_games, 1)
+                    avg_steals = round(total_steals / total_games, 1)
+                    avg_blocks = round(total_blocks / total_games, 1)
+                    row = {
+                        "ID": id,
+                        "Full Name": full_name,
+                        "Position": p_pos,
+                        "Country": p_country,
+                        "Weight": p_weight,
+                        "Height": p_height,
+                        "Team Abbreviation": team_abb,
+                        "Team Full Name": team_full_name,
+                        "Total Games": total_games,
+                        "Total Points": total_points,
+                        "Total Assists": total_assists,
+                        "Total Rebounds": total_rebounds,
+                        "Total Blocks": total_blocks,
+                        "Total Steals": total_steals,
+                        "Avg Points": avg_points,
+                        "Avg Assists": avg_assists,
+                        "Avg Rebounds": avg_rebounds,
+                        "Avg Blocks": avg_blocks,
+                        "Avg Steals": avg_steals,
+                        "Season Games": None,
+                        "Season Points": None,
+                        "Season Assists": None,
+                        "Season Rebounds": None,
+                        "Season Blocks": None,
+                        "Season Avg Points": None,
+                        "Season Avg Assists": None,
+                        "Season Avg Rebounds": None,
+                        "Season Avg Blocks": None,
+                        "Season Avg Steals": None,
+                    }
+                    writer.writerow(row)
+                time.sleep(1.5)
+
+            except Exception as e:
+                print(e)
+
+
+extract_current_nba_players()
