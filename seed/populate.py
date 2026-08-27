@@ -334,16 +334,16 @@ def populate_historical_records():
                 "is_active": True if row.get("active") == "Y" else False,
                 "details": {
                     "season": row.get("season", None),
-                    "team": row.get("team", None)
+                    "team": row.get("team", None),
                 },
             }
-            collection.update_one({"record": category},{"$set": document}, upsert=True)
+            collection.update_one({"record": category}, {"$set": document}, upsert=True)
             print(f"Document for the record {category} was successfully inserted")
         except Exception as e:
             print(f"Errow while trying to populate the db {e}")
     return
 
 
-#populate_historical_players()
-#populate_historical_players_seasons()
+# populate_historical_players()
+# populate_historical_players_seasons()
 populate_historical_records()
