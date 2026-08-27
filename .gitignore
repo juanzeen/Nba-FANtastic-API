@@ -223,3 +223,6 @@ __marimo__/
 dump
 dump/
 dump/*
+#personal nba_api/csv tests
+notebook.py
+seed/notebook.py

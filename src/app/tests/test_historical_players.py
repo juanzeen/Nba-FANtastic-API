@@ -1,11 +1,8 @@
 from httpx import ASGITransport, AsyncClient
 from unittest.mock import AsyncMock, MagicMock
-from starlette.testclient import TestClient as TestClient
 import pytest
 from ..main import app
 from ..dependencies import get_client, get_db
-
-client = TestClient(app)
 
 
 @pytest.mark.anyio

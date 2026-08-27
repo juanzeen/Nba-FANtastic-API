@@ -1,5 +1,10 @@
 from nba_api.stats.static import players
-from nba_api.stats.endpoints import playercareerstats, playerawards, commonplayerinfo
+from nba_api.stats.endpoints import (
+    playercareerstats,
+    playerawards,
+    commonplayerinfo,
+    alltimeleadersgrids,
+)
 import pandas as pd
 import time
 import csv
@@ -109,176 +114,6 @@ def extract_legendary_players():
                 print(f"Erro ao processar {name}: {e}")
                 continue
 
-
-def get_legendary_players_max_avg():
-    df = playercareerstats.PlayerCareerStats(player_id="76003").get_data_frames()[0]
-    if df.empty or "GP" not in df.columns:
-        return None
-    total_blocks = int(df["BLK"].sum())
-    total_steals = int(df["STL"].sum())
-
-    # Filtra apenas temporadas onde o jogador realmente jogou para evitar divisão por zero
-    df = df[df["GP"] > 0].copy()
-
-    if df.empty:
-        return None
-
-    # Calcula as médias por jogo para cada temporada individualmente
-    df["PPG"] = df["PTS"] / df["GP"]
-    df["APG"] = df["AST"] / df["GP"]
-    df["RPG"] = df["REB"] / df["GP"]
-    df["BLK"] = df["BLK"] / df["GP"]
-    df["STL"] = df["STL"] / df["GP"]
-
-    # Encontra a linha (temporada) com a maior média de pontos (PPG)
-    max_ppg_row = df.loc[df["PPG"].idxmax()]
-
-    # Encontra a linha com a maior média de assistências (APG)
-    max_apg_row = df.loc[df["APG"].idxmax()]
-    max_reb_row = df.loc[df["RPG"].idxmax()]
-    max_blk_row = df.loc[df["BLK"].idxmax()]
-    max_stl_row = df.loc[df["STL"].idxmax()]
-    peaks = {
-        "steals": total_steals,
-        "blocks": total_blocks,
-        "max_ppg": {
-            "value": round(max_ppg_row["PPG"], 1),
-            "season": max_ppg_row["SEASON_ID"],
-            "team": max_ppg_row["TEAM_ABBREVIATION"],
-        },
-        "max_apg": {
-            "value": round(max_apg_row["APG"], 1),
-            "season": max_apg_row["SEASON_ID"],
-            "team": max_apg_row["TEAM_ABBREVIATION"],
-        },
-        "max_rpg": {
-            "value": round(max_reb_row["RPG"], 1),
-            "season": max_reb_row["SEASON_ID"],
-            "team": max_reb_row["TEAM_ABBREVIATION"],
-        },
-        "max_bpg": {
-            "value": round(max_blk_row["BLK"], 1),
-            "season": max_blk_row["SEASON_ID"],
-            "team": max_blk_row["TEAM_ABBREVIATION"],
-        },
-        "max_spg": {
-            "value": round(max_stl_row["STL"], 1),
-            "season": max_stl_row["SEASON_ID"],
-            "team": max_stl_row["TEAM_ABBREVIATION"],
-        },
-    }
-
-    print(peaks)
-
-
-def update_all_players_career_data():
-    file_name = "nba_legends.csv"
-
-    if not pd.io.common.file_exists(file_name):
-        print(f"Arquivo {file_name} não encontrado.")
-        return
-
-    df = pd.read_csv(file_name)
-    all_player_ids = df["Player ID"].tolist()
-
-    print(f"Iniciando a atualização completa para {len(all_player_ids)} jogadores...")
-
-    for player_id in all_player_ids:
-        player_row = df[df["Player ID"].astype(str) == str(player_id)].iloc[0]
-        full_name = player_row["Full Name"]
-
-        try:
-            career = playercareerstats.PlayerCareerStats(player_id=player_id)
-            df_career = career.get_data_frames()[0]
-
-            if df_career.empty:
-                print(f"⚠️ Sem dados para {full_name}")
-                continue
-
-            # Tratamento blindado contra colunas vazias
-            for col in ["PTS", "REB", "AST", "GP", "STL", "BLK"]:
-                if col not in df_career.columns:
-                    df_career[col] = 0
-                else:
-                    df_career[col] = pd.to_numeric(
-                        df_career[col], errors="coerce"
-                    ).fillna(0)
-
-            df_career = df_career[df_career["GP"] > 0].copy()
-
-            # --- CÁLCULO DO TEMPO DE CARREIRA ---
-            total_seasons = int(df_career["SEASON_ID"].nunique())
-            career_span = (
-                f"{df_career['SEASON_ID'].min()} - {df_career['SEASON_ID'].max()}"
-            )
-
-            # Totais Gerais
-            total_games = int(df_career["GP"].sum())
-            total_points = int(df_career["PTS"].sum())
-            total_rebs = int(df_career["REB"].sum())
-            total_asts = int(df_career["AST"].sum())
-            total_stl = int(df_career["STL"].sum())
-            total_blk = int(df_career["BLK"].sum())
-
-            # Médias por Temporada para os Picos (incluindo Steals e Blocks)
-            df_career["PPG"] = df_career["PTS"] / df_career["GP"]
-            df_career["APG"] = df_career["AST"] / df_career["GP"]
-            df_career["RPG"] = df_career["REB"] / df_career["GP"]
-            df_career["SPG"] = df_career["STL"] / df_career["GP"]
-            df_career["BPG"] = df_career["BLK"] / df_career["GP"]
-
-            max_ppg = df_career.loc[df_career["PPG"].idxmax()]
-            max_rpg = df_career.loc[df_career["RPG"].idxmax()]
-            max_apg = df_career.loc[df_career["APG"].idxmax()]
-            max_spg = df_career.loc[df_career["SPG"].idxmax()]
-            max_bpg = df_career.loc[df_career["BPG"].idxmax()]
-
-            idx = df[df["Player ID"].astype(str) == str(player_id)].index[0]
-
-            # --- ATUALIZAÇÃO DE TODAS AS COLUNAS DO CSV ---
-            df.at[idx, "Total Games"] = total_games
-            df.at[idx, "Total Points"] = total_points
-            df.at[idx, "Total Rebounds"] = total_rebs
-            df.at[idx, "Total Assists"] = total_asts
-            df.at[idx, "Total Steals"] = total_stl
-            df.at[idx, "Total Blocks"] = total_blk
-
-            # Mantém os prêmios que já estavam salvos no CSV original
-            df.at[idx, "MVPs"] = player_row["MVPs"]
-            df.at[idx, "Finals MVPs"] = player_row["Finals MVPs"]
-            df.at[idx, "All-Star Appearances"] = player_row["All-Star Appearances"]
-
-            # Picos de Carreira e Temporadas
-            df.at[idx, "Peak PPG"] = round(max_ppg["PPG"], 1)
-            df.at[idx, "Peak PPG Season"] = max_ppg["SEASON_ID"]
-            df.at[idx, "Peak RPG"] = round(max_rpg["RPG"], 1)
-            df.at[idx, "Peak RPG Season"] = max_rpg["SEASON_ID"]
-            df.at[idx, "Peak APG"] = round(max_apg["APG"], 1)
-            df.at[idx, "Peak APG Season"] = max_apg["SEASON_ID"]
-            df.at[idx, "Peak SPG"] = round(max_spg["SPG"], 1)
-            df.at[idx, "Peak SPG Season"] = max_spg["SEASON_ID"]
-            df.at[idx, "Peak BPG"] = round(max_bpg["BPG"], 1)
-            df.at[idx, "Peak BPG Season"] = max_bpg["SEASON_ID"]
-
-            # Novas colunas de tempo de carreira
-            df.at[idx, "Total Seasons"] = total_seasons
-            df.at[idx, "Career Span"] = career_span
-
-            print(f"Atualizado: {full_name} ({career_span} | {total_seasons} temps)")
-            time.sleep(1.5)
-
-        except Exception as e:
-            print(f"⚠️ Erro ao processar {full_name}: {e}")
-            continue
-
-    # Salva o arquivo final com a estrutura completa
-    df.to_csv("nba_legends_normalized.csv", index=False)
-    print(
-        f"\nSucesso! O arquivo '{file_name}' foi atualizado contemplando todas as colunas."
-    )
-
-
-def update_legends_data():
     file_name = "nba_legends.csv"
     if not pd.io.common.file_exists(file_name):
         print("Arquivo nba_legends.csv não encontrado!")
@@ -386,29 +221,166 @@ def update_legends_data():
         )
 
 
-def get_players_position():
-    file_name = "nba_legends.csv"
-
-    if not pd.io.common.file_exists(file_name):
-        print(f"Arquivo {file_name} não encontrado.")
+def update_legends_career_data(file_name="nba_legends.csv"):
+    """
+    Centralized function to update NBA legends data with complete career statistics,
+    season peaks (PPG, RPG, APG, SPG, BPG), career span, total seasons, and position.
+    """
+    if not os.path.exists(file_name):
+        print(f"Arquivo '{file_name}' não encontrado.")
         return
 
     df = pd.read_csv(file_name)
-    players_id = df["Player ID"].to_list()
-    print(players_id)
-    for player_id in players_id:
+    all_player_ids = df["Player ID"].tolist()
+
+    print(
+        f"Iniciando a atualização completa para {len(all_player_ids)} jogadores a partir de '{file_name}'..."
+    )
+
+    stat_cols = ["PTS", "REB", "AST", "GP", "STL", "BLK"]
+
+    for player_id in all_player_ids:
+        player_matches = df[df["Player ID"].astype(str) == str(player_id)]
+        if player_matches.empty:
+            continue
+        idx = player_matches.index[0]
+        full_name = df.at[idx, "Full Name"]
+
         try:
+            career = playercareerstats.PlayerCareerStats(player_id=player_id)
             info = commonplayerinfo.CommonPlayerInfo(player_id=player_id)
+            awards = playerawards.PlayerAwards(player_id=player_id)
+            df_career = career.get_data_frames()[0]
             df_info = info.get_data_frames()[0]
+            df_awards = awards.get_data_frames()[0]
 
+            if df_career.empty:
+                print(f"No career data for {full_name}")
+                continue
+
+            for col in stat_cols:
+                if col not in df_career.columns:
+                    df_career[col] = 0
+
+            df_career = df_career[df_career["GP"] > 0].copy()
+            if df_career.empty:
+                print(f"No valid games for {full_name}")
+                continue
+
+            total_seasons = int(df_career["SEASON_ID"].nunique())
+            career_span = (
+                f"{df_career['SEASON_ID'].min()} - {df_career['SEASON_ID'].max()}"
+            )
+
+            total_games = int(df_career["GP"].sum())
+            total_points = int(df_career["PTS"].sum())
+            total_rebs = int(df_career["REB"].sum())
+            total_asts = int(df_career["AST"].sum())
+            total_stl = int(df_career["STL"].sum())
+            total_blk = int(df_career["BLK"].sum())
+
+            season_mvps = len(
+                df_awards[df_awards["DESCRIPTION"] == "NBA Most Valuable Player"]
+            )
+            finals_mvps = len(
+                df_awards[df_awards["DESCRIPTION"] == "NBA Finals Most Valuable Player"]
+            )
+            all_star_apps = len(df_awards[df_awards["DESCRIPTION"] == "NBA All-Star"])
+
+            df_career["PPG"] = df_career["PTS"] / df_career["GP"]
+            df_career["APG"] = df_career["AST"] / df_career["GP"]
+            df_career["RPG"] = df_career["REB"] / df_career["GP"]
+            df_career["SPG"] = df_career["STL"] / df_career["GP"]
+            df_career["BPG"] = df_career["BLK"] / df_career["GP"]
+
+            max_ppg = df_career.loc[df_career["PPG"].idxmax()]
+            max_rpg = df_career.loc[df_career["RPG"].idxmax()]
+            max_apg = df_career.loc[df_career["APG"].idxmax()]
+            max_spg = df_career.loc[df_career["SPG"].idxmax()]
+            max_bpg = df_career.loc[df_career["BPG"].idxmax()]
+
+            df.at[idx, "Total Games"] = total_games
+            df.at[idx, "Total Points"] = total_points
+            df.at[idx, "Total Rebounds"] = total_rebs
+            df.at[idx, "Total Assists"] = total_asts
+            df.at[idx, "Total Steals"] = total_stl
+            df.at[idx, "Total Blocks"] = total_blk
+
+            df.at[idx, "MVPs"] = season_mvps
+            df.at[idx, "Finals MVPs"] = finals_mvps
+            df.at[idx, "All-Star Appearances"] = all_star_apps
+
+            df.at[idx, "Peak PPG"] = round(float(max_ppg["PPG"]), 1)
+            df.at[idx, "Peak PPG Season"] = max_ppg["SEASON_ID"]
+            df.at[idx, "Peak RPG"] = round(float(max_rpg["RPG"]), 1)
+            df.at[idx, "Peak RPG Season"] = max_rpg["SEASON_ID"]
+            df.at[idx, "Peak APG"] = round(float(max_apg["APG"]), 1)
+            df.at[idx, "Peak APG Season"] = max_apg["SEASON_ID"]
+            df.at[idx, "Peak SPG"] = (
+                round(float(max_spg["SPG"]), 1) if max_spg["SPG"] > 0 else 0.0
+            )
+            df.at[idx, "Peak SPG Season"] = (
+                max_spg["SEASON_ID"] if max_spg["SPG"] > 0 else "N/A"
+            )
+            df.at[idx, "Peak BPG"] = (
+                round(float(max_bpg["BPG"]), 1) if max_bpg["BPG"] > 0 else 0.0
+            )
+            df.at[idx, "Peak BPG Season"] = (
+                max_bpg["SEASON_ID"] if max_bpg["BPG"] > 0 else "N/A"
+            )
+
+            df.at[idx, "Total Seasons"] = total_seasons
+            df.at[idx, "Career Span"] = career_span
+
+            position = ""
             if not df_info.empty and "POSITION" in df_info.columns:
-                position = df_info["POSITION"].iloc[0]
+                pos_val = df_info["POSITION"].iloc[0]
+                if pd.notna(pos_val) and str(pos_val).strip() != "":
+                    position = str(pos_val).strip()
 
-            if pd.notna(position) and position != "":
-                idx = df[df["Player ID"].astype(str) == str(player_id)].index[0]
+            if position:
                 df.at[idx, "Position"] = position
 
+            print(f"Atualizado: {full_name} ({career_span} | {total_seasons} temps)")
+            time.sleep(1.5)
+
         except Exception as e:
-            print(f"Erro ao buscar posição para o ID {player_id}: {e}")
-        time.sleep(1)
-    df.to_csv("legends_with_position.csv", index=False)
+            print(f"Erro ao processar {full_name} (ID: {player_id}): {e}")
+            continue
+
+    df.to_csv("nba_legends.csv", index=False)
+    print(
+        f"\nSucesso! O arquivo nba_legends.csv foi totalmente atualizado contemplando todas as colunas."
+    )
+
+
+def get_all_time_leaders():
+    endpoints = [
+        alltimeleadersgrids.AllTimeLeadersGrids().ast_leaders,
+        alltimeleadersgrids.AllTimeLeadersGrids().blk_leaders,
+        alltimeleadersgrids.AllTimeLeadersGrids().fg3_m_leaders,
+        alltimeleadersgrids.AllTimeLeadersGrids().fgm_leaders,
+        alltimeleadersgrids.AllTimeLeadersGrids().g_p_leaders,
+        alltimeleadersgrids.AllTimeLeadersGrids().pts_leaders,
+        alltimeleadersgrids.AllTimeLeadersGrids().reb_leaders,
+        alltimeleadersgrids.AllTimeLeadersGrids().stl_leaders,
+    ]
+    leaders = []
+    for f in endpoints:
+        try:
+            current_leaders = f.get_dict()
+            record_obj = {
+                "category": current_leaders.get("headers")[2],
+                "value": current_leaders.get("data")[0][2],
+                "leader_id": current_leaders.get("data")[0][0],
+                "leader_full_name": current_leaders.get("data")[0][1],
+                "active": current_leaders.get("data")[0][4],
+            }
+            print(record_obj)
+            leaders.append(record_obj)
+        except Exception as e:
+            print(e)
+    pd.DataFrame(leaders).to_csv("all_time_leaders.csv", index=False)
+
+
+update_legends_career_data()

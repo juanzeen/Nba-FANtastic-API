@@ -1,0 +1,24 @@
+category,value,leader_id,leader_full_name,active,season,team
+ALL_TIME_AST,15806,304,John Stockton,N
+ALL_TIME_BLK,3830,165,Hakeem Olajuwon,N
+ALL_TIME_FG3M,4248,201939,Stephen Curry,Y
+ALL_TIME_FGM,15961,2544,LeBron James,Y
+ALL_TIME_GP,1622,2544,LeBron James,Y
+ALL_TIME_PTS,43440,2544,LeBron James,Y
+ALL_TIME_REB,23924,76375,Wilt Chamberlain,N
+ALL_TIME_STL,3265,304,John Stockton,N
+SEASON_APG,14.5, 304,John Stockton,N,1989-1990,Utah Jazz
+SEASON_BPG,5.6, 76631 ,Mark Eaton, N,1984-1985,Utah Jazz
+SEASON_3PG,5.3,201939,Stephen Curry,Y,2020-2021,Golden State Warriors
+SEASON_FGPG,20.0, 76375,Wilt Chamberlain, N,1961-1962,Philadelphia 76ers
+SEASON_PPG,50.4, 76375,Wilt Chamberlain, N,1961-1962,Philadelphia 76ers
+SEASON_RPG,27.2, 76375,Wilt Chamberlain, N,1960-1961,Philadelphia 76ers
+SEASON_SPG,3.7, 926,Alvin Robertson, N,1985-1986,San Antonio Spurs
+GAME_AST,30, 101,Scott Skiles, N,1990-1991,Orlando Magic
+GAME_BLK,17, 78188,Elmore Smith, N,1973-1974,Los Angeles Lakers
+GAME_3PM,14, 202691,Klay Thompson, Y,2018-2019,Golden State Warriors
+GAME_FGM,36, 76375,Wilt Chamberlain, N,1961-1962,Philadelphia 76ers
+GAME_PTS,100, 76375,Wilt Chamberlain, N,1961-1962,Philadelphia 76ers
+GAME_REB, 55, 76375,Wilt Chamberlain, N,1960-1961,Philadelphia 76ers
+GAME_STL_1,11, 77246,Larry Kenon, N,1976-1977,San Antonio Spurs
+GAME_STL_2,11, 383,Kendall Gill, N,1998-1999,Brooklyn Nets

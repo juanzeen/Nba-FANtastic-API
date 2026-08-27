@@ -3,6 +3,7 @@ import os
 import time
 import dotenv
 import pandas as pd
+import numpy as np
 from pymongo import MongoClient
 from nba_api.stats.endpoints import playercareerstats
 
@@ -309,9 +310,40 @@ def fix_seasons_structure():
         updated_count += 1
 
     print(
-        f"\n✨ Success! {updated_count} players had their seasons corrected and cleaned of NaN values."
+        f"\nSuccess! {updated_count} players had their seasons corrected and cleaned of NaN values."
     )
 
 
-populate_historical_players()
-populate_historical_players_seasons()
+def populate_historical_records():
+    collection = get_db_collection("historical_records")
+
+    csv = "historical_records.csv"
+    if not os.path.exists(csv):
+        print("CSV not found")
+        return
+    df_records = pd.read_csv(csv).replace({np.nan: None})
+
+    for _, row in df_records.iterrows():
+        category = row.get("category")
+        try:
+            document = {
+                "record": category,
+                "value": row.get("value"),
+                "leader_id": row.get("leader_id"),
+                "leader_full_name": row.get("leader_full_name"),
+                "is_active": True if row.get("active") == "Y" else False,
+                "details": {
+                    "season": row.get("season", None),
+                    "team": row.get("team", None),
+                },
+            }
+            collection.update_one({"record": category}, {"$set": document}, upsert=True)
+            print(f"Document for the record {category} was successfully inserted")
+        except Exception as e:
+            print(f"Errow while trying to populate the db {e}")
+    return
+
+
+# populate_historical_players()
+# populate_historical_players_seasons()
+populate_historical_records()
