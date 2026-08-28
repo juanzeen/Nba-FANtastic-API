@@ -7,10 +7,12 @@ import numpy as np
 from pymongo import MongoClient
 from nba_api.stats.endpoints import playercareerstats
 
+
 def convert_to_cm(fi: str) -> float:
     feet, inch = fi.split("-")
     height_cm = round((int(feet) * 30.48) + (int(inch) * 2.54))
     return height_cm
+
 
 def get_db_collection(collection_name: str = "historical_players"):
     """Initialize and return a MongoDB collection using environment variables."""
@@ -351,13 +353,13 @@ def populate_historical_records():
 def populate_nba_players():
     file_path = "nba_players.csv"
     if not os.path.exists(file_path):
-            print("CSV file not found!")
-            return
+        print("CSV file not found!")
+        return
     collection = get_db_collection("players")
     df_legends = pd.read_csv(file_path).replace({np.nan: None})
     print(
-            f"Starting migration of {len(df_legends)} legends to MongoDB ({file_path})..."
-        )
+        f"Starting migration of {len(df_legends)} legends to MongoDB ({file_path})..."
+    )
 
     for _, row in df_legends.iterrows():
         player_id = clean_int(row.get("ID"))
@@ -384,22 +386,48 @@ def populate_nba_players():
         avg_steals = row.get("Avg Steals")
         avg_blocks = row.get("Avg Blocks")
         document = {
-                  "id": player_id,
-                  "full_name": full_name,
-                  "position": p_pos,
-                  "country": p_country,
-                  "weight": p_weight,
-                  "height": p_height,
-                  "team": {"abbreviation": team_abb, "name": team_full_name},
-                  "career": {
-                    "totals": {"games": total_games, "points": total_points, "assists": total_assists, "rebounds": total_rebounds,"blocks": total_blocks, "steals": total_steals},
-                    "avg": { "points": avg_points, "assists": avg_assists, "rebounds": avg_rebounds,"blocks": avg_blocks, "steals": avg_steals}
-                  },
-                  "season": {
-                    "totals": {"games": None, "points": None,  "assists": None, "rebounds": None, "blocks": None, "steals": None,},
-                    "avg": { "points": None , "assists": None , "rebounds": None ,"blocks": None , "steals": None }
-                  }
-                }
+            "id": player_id,
+            "full_name": full_name,
+            "position": p_pos,
+            "country": p_country,
+            "weight": p_weight,
+            "height": p_height,
+            "team": {"abbreviation": team_abb, "name": team_full_name},
+            "career": {
+                "totals": {
+                    "games": total_games,
+                    "points": total_points,
+                    "assists": total_assists,
+                    "rebounds": total_rebounds,
+                    "blocks": total_blocks,
+                    "steals": total_steals,
+                },
+                "avg": {
+                    "points": avg_points,
+                    "assists": avg_assists,
+                    "rebounds": avg_rebounds,
+                    "blocks": avg_blocks,
+                    "steals": avg_steals,
+                },
+            },
+            "season": {
+                "totals": {
+                    "games": None,
+                    "points": None,
+                    "assists": None,
+                    "rebounds": None,
+                    "blocks": None,
+                    "steals": None,
+                },
+                "avg": {
+                    "points": None,
+                    "assists": None,
+                    "rebounds": None,
+                    "blocks": None,
+                    "steals": None,
+                },
+            },
+        }
         collection.update_one({"_id": player_id}, {"$set": document}, upsert=True)
 
     return

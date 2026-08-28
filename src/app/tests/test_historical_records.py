@@ -32,7 +32,7 @@ async def test_get_historical_records():
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://") as ac:
         response = await ac.get("/historical-records/")
         data = response.json().get("data", [])
-        message = response.json().get("message", [])
+        message = response.json().get("message", None)
     app.dependency_overrides.clear()
     response.status_code == 200
     assert len(data) > 0
@@ -51,7 +51,7 @@ async def test_fail_get_historical_records():
     ) as ac:
         response = await ac.get("/historical-records/")
         data = response.json().get("data", [])
-        message = response.json().get("message", [])
+        message = response.json().get("message", None)
     app.dependency_overrides.clear()
     response.status_code == 404
     assert data == None

@@ -1,11 +1,12 @@
 from fastapi import FastAPI, Depends, HTTPException
 from .dependencies import get_client
-from .routers import historical_players, historical_records
+from .routers import historical_players, historical_records, nba_players
 
 app = FastAPI()
 
 app.include_router(historical_players.router)
 app.include_router(historical_records.router)
+app.include_router(nba_players.router)
 
 
 @app.get("/", status_code=200)
