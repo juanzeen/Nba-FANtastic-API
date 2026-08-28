@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Query, Depends, HTTPException
+from fastapi import APIRouter, Query, Path, Depends, HTTPException
 from typing import Annotated, Optional
 from ..dependencies import get_db
+from ..schemas.historical_players import HistoricalPlayer
 from ..utils.strings import format_player_name
 
 router = APIRouter(prefix="/historical-players", tags=["Historical Players"])
@@ -12,17 +13,17 @@ async def get_historical_players(
         Optional[str],
         Query(
             min_length=2,
-            description="Player name to search for. Can be used with last_name or with hyphen. Eg: 'LeBron' or 'LeBron-James'",
+            title="Player name to search for. Can be used with last_name or with hyphen. Eg: 'LeBron' or 'LeBron-James'",
         ),
     ] = None,
     last_name: Annotated[
         str,
         Query(
-            description="Expected to be used for specific cases with capitalized last name. Eg: 'James'"
+            title="Expected to be used for specific cases with capitalized last name. Eg: 'James'"
         ),
     ] = "",
     db=Depends(get_db),
-):
+) -> list[HistoricalPlayer] | HistoricalPlayer:
     hp = db["historical_players"]
 
     if name:
@@ -55,7 +56,12 @@ async def get_historical_players(
 
 
 @router.get("/{id}", status_code=200)
-async def get_historical_player_by_id(id: int, db=Depends(get_db)):
+async def get_historical_player_by_id(
+    id: Annotated[
+        int, Path(max_length=6, title="ID from the player who will be fetched")
+    ],
+    db=Depends(get_db),
+) -> HistoricalPlayer:
     hp = db["historical_players"]
     player = await hp.find_one({"_id": id})
     if player:

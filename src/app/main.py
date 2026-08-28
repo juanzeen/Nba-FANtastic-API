@@ -9,7 +9,7 @@ app.include_router(historical_records.router)
 app.include_router(nba_players.router)
 
 
-@app.get("/", status_code=200)
+@app.get("/", status_code=200, tags=["App"])
 async def health_check(client=Depends(get_client)):
     health_status = {
         "status": "healthy",
