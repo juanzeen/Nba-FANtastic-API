@@ -9,7 +9,41 @@ app.include_router(historical_records.router)
 app.include_router(nba_players.router)
 
 
-@app.get("/", status_code=200, tags=["App"])
+@app.get(
+    "/",
+    status_code=200,
+    tags=["App"],
+    responses={
+        200: {
+            "description": "API is healthy",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "status": "healthy",
+                        "services": {"api": "healthy", "database": "healthy"},
+                    }
+                }
+            },
+        },
+        503: {
+            "description": "Service Unavailable / Database unreachable",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": {
+                            "status": "unhealthy",
+                            "services": {
+                                "api": "healthy",
+                                "database": "unhealthy",
+                                "error": "Connection timed out",
+                            },
+                        }
+                    }
+                }
+            },
+        },
+    },
+)
 async def health_check(client=Depends(get_client)):
     health_status = {
         "status": "healthy",
