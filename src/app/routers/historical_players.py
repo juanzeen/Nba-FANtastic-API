@@ -1,69 +1,85 @@
-from fastapi import APIRouter, Query, Depends, HTTPException
-from typing import Annotated, Optional
+from fastapi import APIRouter, Query, Path, Depends, HTTPException
+from typing import Annotated, Optional, TypedDict
 from ..dependencies import get_db
+from ..schemas.historical_players import HistoricalPlayer
+from ..schemas.pagination import PaginationParams, PaginationResponse
+from ..schemas.contants import ResponseDict, ErrorResponseDict
 from ..utils.strings import format_player_name
+import math
 
 router = APIRouter(prefix="/historical-players", tags=["Historical Players"])
 
 
 @router.get("/", status_code=200)
 async def get_historical_players(
-    name: Annotated[
-        Optional[str],
-        Query(
-            min_length=2,
-            description="Player name to search for. Can be used with last_name or with hyphen. Eg: 'LeBron' or 'LeBron-James'",
-        ),
-    ] = None,
-    last_name: Annotated[
-        str,
-        Query(
-            description="Expected to be used for specific cases with capitalized last name. Eg: 'James'"
-        ),
-    ] = "",
-    db=Depends(get_db),
-):
+    pagination: Annotated[PaginationParams, Query()], db=Depends(get_db)
+) -> PaginationResponse[HistoricalPlayer] | ErrorResponseDict:
     hp = db["historical_players"]
-
-    if name:
-        formatted_player_name = format_player_name(name, last_name)
-        player = await hp.find_one({"full_name": formatted_player_name})
-
-        if not player:
-            raise HTTPException(
-                status_code=404,
-                detail={
-                    "message": f"Player with name {formatted_player_name} not found."
-                },
-            )
-
-        return {
-            "player": player,
-            "message": "Player successfully retrieved.",
-        }
-
-    players = await hp.find().to_list()
+    limit = pagination.limit
+    skip = (pagination.page - 1) * limit
+    total_players = await hp.count_documents({})
+    total_pages = math.ceil(total_players / limit)
+    cursor = hp.find({}).sort("_id", 1).skip(skip).limit(limit)
+    players = await cursor.to_list()
     if not players:
         raise HTTPException(
             status_code=404, detail={"message": "No historical players found."}
         )
 
     return {
-        "players": players,
         "message": "Historical players successfully retrieved.",
+        "pagination": {
+            "page": pagination.page,
+            "limit": pagination.limit,
+            "total_items": total_players,
+            "total_pages": total_pages,
+            "has_next": pagination.page < total_pages,
+            "has_previous": pagination.page > 1,
+        },
+        "data": players,
     }
 
 
 @router.get("/{id}", status_code=200)
-async def get_historical_player_by_id(id: int, db=Depends(get_db)):
+async def get_historical_player_by_id(
+    id: Annotated[
+        int, Path(ge=10, lt=1000000, title="_id from the player who will be fetched")
+    ],
+    db=Depends(get_db),
+) -> ResponseDict[HistoricalPlayer] | ErrorResponseDict:
     hp = db["historical_players"]
     player = await hp.find_one({"_id": id})
     if player:
         return {
-            "player": player,
+            "data": player,
             "message": "Player successfully retrieved.",
         }
 
     raise HTTPException(
         status_code=404, detail={"message": f"Player with id {id} not found."}
+    )
+
+
+@router.get("/search/{slug}", status_code=200)
+async def get_historical_player_by_name(
+    slug: Annotated[
+        str,
+        Path(
+            min_length=8,
+            title="Slug of the player who will be fetched.",
+            description="Slug must be in the format name-lastname",
+        ),
+    ],
+    db=Depends(get_db),
+):
+    hp = db["historical_players"]
+    player = await hp.find_one({"slug": slug})
+    if player:
+        return {
+            "data": player,
+            "message": "Player successfully retrieved.",
+        }
+
+    raise HTTPException(
+        status_code=404, detail={"message": f"Player with slug {slug} not found."}
     )

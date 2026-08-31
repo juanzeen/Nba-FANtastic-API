@@ -8,6 +8,12 @@ from pymongo import MongoClient
 from nba_api.stats.endpoints import playercareerstats
 
 
+def convert_to_cm(fi: str) -> float:
+    feet, inch = fi.split("-")
+    height_cm = round((int(feet) * 30.48) + (int(inch) * 2.54))
+    return height_cm
+
+
 def get_db_collection(collection_name: str = "historical_players"):
     """Initialize and return a MongoDB collection using environment variables."""
     dotenv.load_dotenv()
@@ -153,7 +159,10 @@ def populate_historical_players():
             document = {
                 "_id": player_id,
                 "full_name": full_name,
+                "slug": clean_str(row.get("Player Slug")),
+                "country": clean_str(row.get("Country")),
                 "position": clean_str(row.get("Position"), default="UNK"),
+                "height": clean_str(row.get("Height")),
                 "is_active": False,
                 "career_span": clean_str(row.get("Career Span")),
                 "career_totals": {
@@ -344,6 +353,89 @@ def populate_historical_records():
     return
 
 
-# populate_historical_players()
-# populate_historical_players_seasons()
+def populate_nba_players():
+    file_path = "nba_players.csv"
+    if not os.path.exists(file_path):
+        print("CSV file not found!")
+        return
+    collection = get_db_collection("players")
+    nba_players = pd.read_csv(file_path).replace({np.nan: None})
+    print(
+        f"Starting migration of {len(nba_players)} players to MongoDB ({file_path})..."
+    )
+
+    for _, row in nba_players.iterrows():
+        player_id = clean_int(row.get("ID"))
+        if not player_id:
+            continue
+        full_name = clean_str(row.get("Full Name"))
+        print(f"Adding player {full_name} with _id: {player_id}")
+        p_slug = row.get("Player Slug")
+        p_pos = row.get("Position")
+        p_country = row.get("Country")
+        p_height = row.get("Height")
+        team_abb = row.get("Team Abbreviation")
+        team_full_name = row.get("Team Full Name")
+        total_games = row.get("Total Games")
+        total_points = row.get("Total Points")
+        total_assists = row.get("Total Assists")
+        total_rebounds = row.get("Total Rebounds")
+        total_blocks = row.get("Total Blocks")
+        total_steals = row.get("Total Steals")
+        avg_points = row.get("Avg Points")
+        avg_assists = row.get("Avg Assists")
+        avg_rebounds = row.get("Avg Rebounds")
+        avg_steals = row.get("Avg Steals")
+        avg_blocks = row.get("Avg Blocks")
+        document = {
+            "id": player_id,
+            "full_name": full_name,
+            "slug": p_slug,
+            "position": p_pos,
+            "country": p_country,
+            "height": p_height,
+            "team": {"abbreviation": team_abb, "name": team_full_name},
+            "career": {
+                "totals": {
+                    "games": total_games,
+                    "points": total_points,
+                    "assists": total_assists,
+                    "rebounds": total_rebounds,
+                    "blocks": total_blocks,
+                    "steals": total_steals,
+                },
+                "avg": {
+                    "points": avg_points,
+                    "assists": avg_assists,
+                    "rebounds": avg_rebounds,
+                    "blocks": avg_blocks,
+                    "steals": avg_steals,
+                },
+            },
+            "season": {
+                "totals": {
+                    "games": None,
+                    "points": None,
+                    "assists": None,
+                    "rebounds": None,
+                    "blocks": None,
+                    "steals": None,
+                },
+                "avg": {
+                    "points": None,
+                    "assists": None,
+                    "rebounds": None,
+                    "blocks": None,
+                    "steals": None,
+                },
+            },
+        }
+        collection.update_one({"_id": player_id}, {"$set": document}, upsert=True)
+
+    return
+
+
 populate_historical_records()
+populate_historical_players()
+populate_historical_players_seasons()
+populate_nba_players()
