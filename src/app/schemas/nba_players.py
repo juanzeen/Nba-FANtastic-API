@@ -5,20 +5,20 @@ PyObjectId = Annotated[int, BeforeValidator(int)]
 
 
 class TotalsStats(TypedDict):
-    games: int
-    points: int
-    assists: int
-    rebounds: int
-    blocks: int
-    steals: int
+    games: Optional[int]
+    points: Optional[int]
+    assists: Optional[int]
+    rebounds: Optional[int]
+    blocks: Optional[int]
+    steals: Optional[int]
 
 
 class AvgStats(TypedDict):
-    points: float
-    assists: float
-    rebounds: float
-    blocks: float
-    steals: float
+    points: Optional[float]
+    assists: Optional[float]
+    rebounds: Optional[float]
+    blocks: Optional[float]
+    steals: Optional[float]
 
 
 class Team(TypedDict):
@@ -39,5 +39,5 @@ class Player(BaseModel):
     position: str
     country: str
     career: TotalsAvg
-    season: Optional[TotalsAvg]
+    season: TotalsAvg
     team: Team

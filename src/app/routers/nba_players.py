@@ -52,3 +52,18 @@ async def get_nba_player_by_id(
     raise HTTPException(
         status_code=404, detail={"message": f"Player with id: {id} not found."}
     )
+
+@router.get("/search/{slug}", status_code=200)
+async def get_nba_player_by_slug(
+    slug: Annotated[
+        str, Path(min_length=7, title="Slug from the player who will be fetched", description="Slug in the format name-lastname")
+    ],
+    db=Depends(get_db),
+) -> ResponseDict[Player] | ErrorResponseDict:
+    np = db["players"]
+    player = await np.find_one({"slug": slug})
+    if player:
+        return {"message": "Player successfully retrieved.", "data": player}
+    raise HTTPException(
+        status_code=404, detail={"message": f"Player with slug: {slug} not found."}
+    )
