@@ -37,7 +37,7 @@ async def test_get_historical_records():
         data = response.json().get("data", [])
         message = response.json().get("message", None)
     app.dependency_overrides.clear()
-    response.status_code == 200
+    assert response.status_code == 200
     assert len(data) > 0
     assert message == "Historical records successfully retrieved."
 
@@ -55,7 +55,7 @@ async def test_fail_get_historical_records():
         response = await ac.get("/historical-records/")
         message = response.json().get("detail", None).get("message", None)
     app.dependency_overrides.clear()
-    response.status_code == 404
+    assert response.status_code == 404
     assert message == "Historical records not found."
 
 
@@ -82,7 +82,7 @@ async def test_get_historical_record_by_id():
         data = response.json().get("data", None)
         message = response.json().get("message", [])
     app.dependency_overrides.clear()
-    response.status_code == 200
+    assert response.status_code == 200
     assert message == "Historical record ALL_TIME_PTS successfully retrieved."
     assert data is not None
 
@@ -101,6 +101,6 @@ async def test_fail_get_historical_record_by_id():
         message = response.json().get("detail")[0].get("msg")
         detail = response.json().get("detail")[0].get("type")
     app.dependency_overrides.clear()
-    response.status_code == 422
+    assert response.status_code == 422
     assert detail == "string_too_long"
     assert message == "String should have at most 13 characters"

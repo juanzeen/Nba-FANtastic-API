@@ -16,7 +16,7 @@ async def get_nba_players(
     np = db["players"]
     limit = pagination.limit
     skip = limit * (pagination.page - 1)
-    total_players = await np.count_documents()
+    total_players = await np.count_documents({})
     total_pages = math.ceil(total_players / limit)
     cursor = np.find({}).sort("_id", 1).skip(skip).limit(limit)
     players = await cursor.to_list()
