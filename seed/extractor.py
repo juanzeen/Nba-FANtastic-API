@@ -10,6 +10,8 @@ import time
 import csv
 import os
 
+def normalize_name(name: str):
+    return name.lower().replace("-", "").replace("'", "")
 
 def is_legendary_player(
     points, rebs, asts, mvp_count, all_star_participations, finals_mvp_count, min_games
@@ -347,14 +349,21 @@ def update_legends_career_data(file_name="nba_legends.csv"):
             if position:
                 df.at[idx, "Position"] = position
 
-            print(f"Atualizado: {full_name} ({career_span} | {total_seasons} temps)")
-            time.sleep(1.5)
+            slug = df_info["PLAYER_SLUG"].iloc[0]
+            country = df_info["COUNTRY"].iloc[0]
+            height = convert_to_cm(df_info["HEIGHT"].iloc[0])
+            df.at[idx, "Player Slug"] = slug
+            df.at[idx, "Country"] = country
+            df.at[idx, "Height"] = height
+
+            print(f"Atualizado: {slug} ({country} | {height}cm)")
+            time.sleep(2)
 
         except Exception as e:
             print(f"Erro ao processar {full_name} (ID: {player_id}): {e}")
             continue
 
-    df.to_csv("nba_legends.csv", index=False)
+    df.to_csv("nba_legends_updated.csv", index=False)
     print(
         f"\nSucesso! O arquivo nba_legends.csv foi totalmente atualizado contemplando todas as colunas."
     )
@@ -442,11 +451,9 @@ def extract_current_nba_players():
                 if is_nba_active:
                     print(f"Extracting {full_name} with ID: {id}")
                     p_pos = common_df["POSITION"].iloc[0]
-                    # TODO add these stats to historical players
                     p_country = common_df["COUNTRY"].iloc[0]
                     p_height = convert_to_cm(common_df["HEIGHT"].iloc[0])
                     p_weight = round(int(common_df["WEIGHT"].iloc[0]) / 2.205, 2)
-                    # TODO
                     team_abb = common_df["TEAM_ABBREVIATION"].iloc[0]
                     team_full_name = f"{common_df['TEAM_CITY'].iloc[0]} {common_df['TEAM_NAME'].iloc[0]}"
                     career_df = playercareerstats.PlayerCareerStats(
@@ -500,5 +507,20 @@ def extract_current_nba_players():
             except Exception as e:
                 print(e)
 
+def append_player_slug_actual_players():
+    df = pd.read_csv("nba_players.csv")
+    ids = df["ID"].tolist()
+    for id in ids:
+        player_matches = df[df["ID"].astype(str) == str(id)]
+        if player_matches.empty:
+            continue
+        idx = player_matches.index[0]
+        full_name = df.at[idx, "Full Name"]
+        array = full_name.split(" ")
+        normalized = [normalize_name(n) for n in array]
+        slug = "-".join(normalized)
+        print(f"Adding slug for {full_name} | {slug} ")
+        df.at[idx, "Player Slug"] = slug
+    df.to_csv("nba_players.csv", index=False)
 
-extract_current_nba_players()
+append_player_slug_actual_players()

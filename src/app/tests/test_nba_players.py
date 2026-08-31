@@ -40,7 +40,7 @@ mock_p1 = {
         "avg": {"points": 0, "assists": 0, "rebounds": 0, "blocks": 0, "steals": 0},
     },
     "team": {"abbreviation": "SAC", "name": "Sacramento Kings"},
-    "weight": 110.2,
+    "slug": "precious-achiuwa",
 }
 
 mock_p2 = {
@@ -79,7 +79,7 @@ mock_p2 = {
         "avg": {"points": 0, "assists": 0, "rebounds": 0, "blocks": 0, "steals": 0},
     },
     "team": {"abbreviation": "SAC", "name": "Sacramento Kings"},
-    "weight": 110.2,
+    "slug": "precious-achiuwa",
 }
 
 

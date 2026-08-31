@@ -159,7 +159,10 @@ def populate_historical_players():
             document = {
                 "_id": player_id,
                 "full_name": full_name,
+                "slug": clean_str(row.get("Player Slug")),
+                "country": clean_str(row.get("Country")),
                 "position": clean_str(row.get("Position"), default="UNK"),
+                "height": clean_str(row.get("Height")),
                 "is_active": False,
                 "career_span": clean_str(row.get("Career Span")),
                 "career_totals": {
@@ -356,22 +359,21 @@ def populate_nba_players():
         print("CSV file not found!")
         return
     collection = get_db_collection("players")
-    df_legends = pd.read_csv(file_path).replace({np.nan: None})
+    nba_players = pd.read_csv(file_path).replace({np.nan: None})
     print(
-        f"Starting migration of {len(df_legends)} legends to MongoDB ({file_path})..."
+        f"Starting migration of {len(nba_players)} players to MongoDB ({file_path})..."
     )
 
-    for _, row in df_legends.iterrows():
+    for _, row in nba_players.iterrows():
         player_id = clean_int(row.get("ID"))
         if not player_id:
             continue
         full_name = clean_str(row.get("Full Name"))
         print(f"Adding player {full_name} with _id: {player_id}")
+        p_slug = row.get("Player Slug")
         p_pos = row.get("Position")
         p_country = row.get("Country")
         p_height = row.get("Height")
-        p_weight = row.get("Weight")
-        # TODO
         team_abb = row.get("Team Abbreviation")
         team_full_name = row.get("Team Full Name")
         total_games = row.get("Total Games")
@@ -388,9 +390,9 @@ def populate_nba_players():
         document = {
             "id": player_id,
             "full_name": full_name,
+            "slug": p_slug,
             "position": p_pos,
             "country": p_country,
-            "weight": p_weight,
             "height": p_height,
             "team": {"abbreviation": team_abb, "name": team_full_name},
             "career": {
@@ -433,7 +435,7 @@ def populate_nba_players():
     return
 
 
-# populate_historical_players()
-# populate_historical_players_seasons()
 # populate_historical_records()
+populate_historical_players()
+# populate_historical_players_seasons()
 populate_nba_players()

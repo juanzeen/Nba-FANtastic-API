@@ -47,8 +47,10 @@ class Season(TypedDict):
 class HistoricalPlayer(BaseModel):
     id: PyObjectId = Field(default=None, alias="_id")
     full_name: str
-    career_span: str
+    slug: str
     position: str
+    height: int
+    career_span: str
     is_active: bool
     career_peaks: CareerPeaks
     career_totals: CareerTotals

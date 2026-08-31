@@ -13,12 +13,14 @@ def convert_to_cm(fi: str) -> float:
 
 def notebook():
     all_players_data = players.get_players()
-    active_players = [p for p in all_players_data if p["is_active"]][:15] #530 players
+    active_players = [p for p in all_players_data if p["is_active"]][:2] #530 players
+
     for p in active_players:
       id = p.get("id")
       full_name = p.get("full_name")
       try:
         common_df = commonplayerinfo.CommonPlayerInfo(player_id=p.get("id")).get_data_frames()[0]
+        print(common_df['PLAYER_SLUG'].iloc[0])
         is_nba_active = True if common_df['ROSTERSTATUS'].iloc[0] == 'Active' else False
         if is_nba_active:
           p_pos = common_df['POSITION'].iloc[0]
