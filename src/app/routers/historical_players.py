@@ -3,17 +3,11 @@ from typing import Annotated, Optional, TypedDict
 from ..dependencies import get_db
 from ..schemas.historical_players import HistoricalPlayer
 from ..schemas.pagination import PaginationParams, PaginationResponse
+from ..schemas.contants import ResponseDict, ErrorResponseDict
 from ..utils.strings import format_player_name
 import math
 
 router = APIRouter(prefix="/historical-players", tags=["Historical Players"])
-
-class ResponseDict(TypedDict):
-    data: list[HistoricalPlayer] | HistoricalPlayer
-    message: str
-
-class ErrorResponseDict(TypedDict):
-    detail: dict[str, str]
 
 @router.get("/", status_code=200, response_model=PaginationResponse[HistoricalPlayer])
 async def get_historical_players(
@@ -51,7 +45,7 @@ async def get_historical_player_by_id(
         int, Path(ge=10, lt=1000000, title="_id from the player who will be fetched")
     ] | Annotated[str, Path(min_length=3, title="Slug from the player who will be fetched")],
     db=Depends(get_db),
-) -> ResponseDict:
+) -> ResponseDict | ErrorResponseDict:
     hp = db["historical_players"]
     player = await hp.find_one({"_id": id_or_slug})
     if player:

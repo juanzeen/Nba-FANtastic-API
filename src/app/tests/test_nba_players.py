@@ -4,29 +4,117 @@ import pytest
 from ..main import app
 from ..dependencies import get_db
 
+mock_p1 = {
+  "_id": 1630173,
+  "career": {
+    "totals": {
+      "games": 467,
+      "points": 3721,
+      "assists": 511,
+      "rebounds": 2792,
+      "blocks": 327,
+      "steals": 29
+    },
+    "avg": {
+      "points": 8,
+      "assists": 1.1,
+      "rebounds": 6,
+      "blocks": 0.7,
+      "steals": 0.6
+    }
+  },
+  "country": 'Nigeria',
+  "full_name": 'Precious Achiuwa',
+  "height": 203,
+  "id": 1630173,
+  "position": 'Forward',
+  "season": {
+    "totals": {
+      "games": 0,
+      "points": 0,
+      "assists": 0,
+      "rebounds": 0,
+      "blocks": 0,
+      "steals": 0
+    },
+    "avg": {
+      "points": 0,
+      "assists": 0,
+      "rebounds": 0,
+      "blocks": 0,
+      "steals": 0
+    }
+  },
+  "team": {
+    "abbreviation": 'SAC',
+    "name": 'Sacramento Kings'
+  },
+  "weight": 110.2
+}
+
+mock_p2 = {
+  "_id": 30212,
+  "career": {
+    "totals": {
+      "games": 467,
+      "points": 3721,
+      "assists": 511,
+      "rebounds": 2792,
+      "blocks": 327,
+      "steals": 29
+    },
+    "avg": {
+      "points": 8,
+      "assists": 1.1,
+      "rebounds": 6,
+      "blocks": 0.7,
+      "steals": 0.6
+    }
+  },
+  "country": 'Nigeria',
+  "full_name": 'Precious Achiuwa',
+  "height": 203,
+  "id": 1630173,
+  "position": 'Forward',
+  "season": {
+    "totals": {
+      "games": 0,
+      "points": 0,
+      "assists": 0,
+      "rebounds": 0,
+      "blocks": 0,
+      "steals": 0
+    },
+    "avg": {
+      "points": 0,
+      "assists": 0,
+      "rebounds": 0,
+      "blocks": 0,
+      "steals": 0
+    }
+  },
+  "team": {
+    "abbreviation": 'SAC',
+    "name": 'Sacramento Kings'
+  },
+  "weight": 110.2
+}
 
 @pytest.mark.anyio
 async def test_get_players():
     mock_db = MagicMock()
     mock_collection = MagicMock()
-    mock_collection.find.return_value.to_list = AsyncMock(
+    mock_cursor = MagicMock()
+    mock_collection.count_documents = AsyncMock(return_value=160)
+    mock_cursor.sort.return_value = mock_cursor
+    mock_cursor.skip.return_value = mock_cursor
+    mock_cursor.limit.return_value = mock_cursor
+    mock_cursor.to_list = AsyncMock(
         return_value=[
-            {
-                "_id": 1,
-                "full_name": "Michael Jordan",
-                "country": "USA",
-                "weight": 123,
-                "height": 192,
-            },
-            {
-                "_id": 2,
-                "full_name": "Michael Jordan",
-                "country": "USA",
-                "weight": 123,
-                "height": 192,
-            },
+            mock_p1, mock_p2
         ]
     )
+    mock_collection.find.return_value = mock_cursor
     mock_db.__getitem__.return_value = mock_collection
     app.dependency_overrides[get_db] = lambda: mock_db
     async with AsyncClient(
@@ -45,7 +133,15 @@ async def test_get_players():
 async def test_fail_get_players():
     mock_db = MagicMock()
     mock_collection = MagicMock()
-    mock_collection.find.return_value = AsyncMock(return_value=[])
+    mock_cursor = MagicMock()
+    mock_collection.count_documents = AsyncMock(return_value=458)
+    mock_cursor.sort.return_value = mock_cursor
+    mock_cursor.skip.return_value = mock_cursor
+    mock_cursor.limit.return_value = mock_cursor
+    mock_cursor.to_list = AsyncMock(
+        None
+    )
+    mock_collection.find.return_value = mock_cursor
     mock_db.__getitem__.return_value = mock_collection
     app.dependency_overrides[get_db] = lambda: mock_db
     async with AsyncClient(
@@ -65,28 +161,21 @@ async def test_get_player():
     mock_db = MagicMock()
     mock_collection = MagicMock()
     mock_collection.find_one = AsyncMock(
-        return_value={
-            "_id": 1,
-            "full_name": "LeBron James",
-            "country": "USA",
-            "weight": 123,
-            "height": 192,
-            "career": {"totals": {"games": 1622}},
-        }
+        return_value=mock_p1
     )
     mock_db.__getitem__.return_value = mock_collection
     app.dependency_overrides[get_db] = lambda: mock_db
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
-        response = await ac.get("/players/1")
+        response = await ac.get("/players/1630173")
         data = response.json().get("data", None)
         career_games = data.get("career", {}).get("totals", {}).get("games", 0)
         message = response.json().get("message", "")
     app.dependency_overrides.clear()
     assert response.status_code == 200
-    assert data.get("_id") == 1
-    assert data.get("full_name") == "LeBron James"
+    assert data.get("_id") == 1630173
+    assert data.get("full_name") == "Precious Achiuwa"
     assert career_games > 0
     assert message == "Player successfully retrieved."
 
@@ -101,11 +190,11 @@ async def test_fail_get_player():
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
-        response = await ac.get("/players/1")
+        response = await ac.get("/players/1231")
         message = response.json().get("detail", "").get("message")
     app.dependency_overrides.clear()
     assert response.status_code == 404
-    assert message == "Player with id: 1 not found."
+    assert message == "Player with id: 1231 not found."
 
 
 @pytest.mark.anyio
