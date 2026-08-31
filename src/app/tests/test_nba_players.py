@@ -169,7 +169,7 @@ async def test_fail_get_player():
         message = response.json().get("detail", "").get("message")
     app.dependency_overrides.clear()
     assert response.status_code == 404
-    assert message == "Player with id: 1231 not found."
+    assert message == "Player with id 1231 not found."
 
 
 @pytest.mark.anyio
@@ -193,3 +193,40 @@ async def test_fail_get_player_invalid_id_format():
         == "Input should be a valid integer, unable to parse string as an integer"
     )
     assert error_type == "int_parsing"
+
+
+@pytest.mark.anyio
+async def test_get_historical_player_by_slug():
+    mock_db = MagicMock()
+    mock_cursor = MagicMock()
+    mock_cursor.find_one = AsyncMock(return_value=mock_p1)
+    mock_db.__getitem__.return_value = mock_cursor
+    app.dependency_overrides[get_db] = lambda: mock_db
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as ac:
+        response = await ac.get("/players/search/precious-achiuwa")
+        player = response.json().get("data", [])
+        message = response.json().get("message", "")
+    app.dependency_overrides.clear()
+    assert response.status_code == 200
+    assert message == "Player successfully retrieved."
+    assert player.get("_id") == 1630173
+    assert player.get("full_name") == "Precious Achiuwa"
+
+
+@pytest.mark.anyio
+async def test_fail_get_historical_player_by_slug():
+    mock_db = MagicMock()
+    mock_cursor = MagicMock()
+    mock_cursor.find_one = AsyncMock(return_value=None)
+    mock_db.__getitem__.return_value = mock_cursor
+    app.dependency_overrides[get_db] = lambda: mock_db
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as ac:
+        response = await ac.get("/players/search/precious-achiuwa")
+        message = response.json().get("detail", "").get("message", "")
+    app.dependency_overrides.clear()
+    assert response.status_code == 404
+    assert message == "Player with slug precious-achiuwa not found."

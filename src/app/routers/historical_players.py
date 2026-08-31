@@ -59,8 +59,19 @@ async def get_historical_player_by_id(
         status_code=404, detail={"message": f"Player with id {id} not found."}
     )
 
+
 @router.get("/search/{slug}", status_code=200)
-async def get_historical_player_by_name(slug: Annotated[str, Path(min_length=8, title="Slug of the player who will be fetched.", description="Slug must be in the format name-lastname")], db=Depends(get_db)):
+async def get_historical_player_by_name(
+    slug: Annotated[
+        str,
+        Path(
+            min_length=8,
+            title="Slug of the player who will be fetched.",
+            description="Slug must be in the format name-lastname",
+        ),
+    ],
+    db=Depends(get_db),
+):
     hp = db["historical_players"]
     player = await hp.find_one({"slug": slug})
     if player:

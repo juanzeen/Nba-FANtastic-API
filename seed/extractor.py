@@ -10,8 +10,10 @@ import time
 import csv
 import os
 
+
 def normalize_name(name: str):
     return name.lower().replace("-", "").replace("'", "")
+
 
 def is_legendary_player(
     points, rebs, asts, mvp_count, all_star_participations, finals_mvp_count, min_games
@@ -507,6 +509,7 @@ def extract_current_nba_players():
             except Exception as e:
                 print(e)
 
+
 def append_player_slug_actual_players():
     df = pd.read_csv("nba_players.csv")
     ids = df["ID"].tolist()
@@ -522,5 +525,6 @@ def append_player_slug_actual_players():
         print(f"Adding slug for {full_name} | {slug} ")
         df.at[idx, "Player Slug"] = slug
     df.to_csv("nba_players.csv", index=False)
+
 
 append_player_slug_actual_players()
