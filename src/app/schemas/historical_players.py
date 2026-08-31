@@ -1,8 +1,9 @@
 from pydantic import BaseModel, BeforeValidator, Field
 from typing import TypedDict, Annotated
 
-#Used to map mongoDB _id to id in JSON response
+# Used to map mongoDB _id to id in JSON response
 PyObjectId = Annotated[int, BeforeValidator(int)]
+
 
 class SeasonAverageStat(TypedDict):
     season: str

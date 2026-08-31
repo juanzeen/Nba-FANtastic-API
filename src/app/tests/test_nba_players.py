@@ -5,100 +5,83 @@ from ..main import app
 from ..dependencies import get_db
 
 mock_p1 = {
-  "_id": 1630173,
-  "career": {
-    "totals": {
-      "games": 467,
-      "points": 3721,
-      "assists": 511,
-      "rebounds": 2792,
-      "blocks": 327,
-      "steals": 29
+    "_id": 1630173,
+    "career": {
+        "totals": {
+            "games": 467,
+            "points": 3721,
+            "assists": 511,
+            "rebounds": 2792,
+            "blocks": 327,
+            "steals": 29,
+        },
+        "avg": {
+            "points": 8,
+            "assists": 1.1,
+            "rebounds": 6,
+            "blocks": 0.7,
+            "steals": 0.6,
+        },
     },
-    "avg": {
-      "points": 8,
-      "assists": 1.1,
-      "rebounds": 6,
-      "blocks": 0.7,
-      "steals": 0.6
-    }
-  },
-  "country": 'Nigeria',
-  "full_name": 'Precious Achiuwa',
-  "height": 203,
-  "id": 1630173,
-  "position": 'Forward',
-  "season": {
-    "totals": {
-      "games": 0,
-      "points": 0,
-      "assists": 0,
-      "rebounds": 0,
-      "blocks": 0,
-      "steals": 0
+    "country": "Nigeria",
+    "full_name": "Precious Achiuwa",
+    "height": 203,
+    "id": 1630173,
+    "position": "Forward",
+    "season": {
+        "totals": {
+            "games": 0,
+            "points": 0,
+            "assists": 0,
+            "rebounds": 0,
+            "blocks": 0,
+            "steals": 0,
+        },
+        "avg": {"points": 0, "assists": 0, "rebounds": 0, "blocks": 0, "steals": 0},
     },
-    "avg": {
-      "points": 0,
-      "assists": 0,
-      "rebounds": 0,
-      "blocks": 0,
-      "steals": 0
-    }
-  },
-  "team": {
-    "abbreviation": 'SAC',
-    "name": 'Sacramento Kings'
-  },
-  "weight": 110.2
+    "team": {"abbreviation": "SAC", "name": "Sacramento Kings"},
+    "weight": 110.2,
 }
 
 mock_p2 = {
-  "_id": 30212,
-  "career": {
-    "totals": {
-      "games": 467,
-      "points": 3721,
-      "assists": 511,
-      "rebounds": 2792,
-      "blocks": 327,
-      "steals": 29
+    "_id": 30212,
+    "career": {
+        "totals": {
+            "games": 467,
+            "points": 3721,
+            "assists": 511,
+            "rebounds": 2792,
+            "blocks": 327,
+            "steals": 29,
+        },
+        "avg": {
+            "points": 8,
+            "assists": 1.1,
+            "rebounds": 6,
+            "blocks": 0.7,
+            "steals": 0.6,
+        },
     },
-    "avg": {
-      "points": 8,
-      "assists": 1.1,
-      "rebounds": 6,
-      "blocks": 0.7,
-      "steals": 0.6
-    }
-  },
-  "country": 'Nigeria',
-  "full_name": 'Precious Achiuwa',
-  "height": 203,
-  "id": 1630173,
-  "position": 'Forward',
-  "season": {
-    "totals": {
-      "games": 0,
-      "points": 0,
-      "assists": 0,
-      "rebounds": 0,
-      "blocks": 0,
-      "steals": 0
+    "country": "Nigeria",
+    "full_name": "Precious Achiuwa",
+    "height": 203,
+    "id": 1630173,
+    "position": "Forward",
+    "season": {
+        "totals": {
+            "games": 0,
+            "points": 0,
+            "assists": 0,
+            "rebounds": 0,
+            "blocks": 0,
+            "steals": 0,
+        },
+        "avg": {"points": 0, "assists": 0, "rebounds": 0, "blocks": 0, "steals": 0},
     },
-    "avg": {
-      "points": 0,
-      "assists": 0,
-      "rebounds": 0,
-      "blocks": 0,
-      "steals": 0
-    }
-  },
-  "team": {
-    "abbreviation": 'SAC',
-    "name": 'Sacramento Kings'
-  },
-  "weight": 110.2
+    "team": {"abbreviation": "SAC", "name": "Sacramento Kings"},
+    "weight": 110.2,
 }
+
 
 @pytest.mark.anyio
 async def test_get_players():
@@ -109,11 +92,7 @@ async def test_get_players():
     mock_cursor.sort.return_value = mock_cursor
     mock_cursor.skip.return_value = mock_cursor
     mock_cursor.limit.return_value = mock_cursor
-    mock_cursor.to_list = AsyncMock(
-        return_value=[
-            mock_p1, mock_p2
-        ]
-    )
+    mock_cursor.to_list = AsyncMock(return_value=[mock_p1, mock_p2])
     mock_collection.find.return_value = mock_cursor
     mock_db.__getitem__.return_value = mock_collection
     app.dependency_overrides[get_db] = lambda: mock_db
@@ -138,9 +117,7 @@ async def test_fail_get_players():
     mock_cursor.sort.return_value = mock_cursor
     mock_cursor.skip.return_value = mock_cursor
     mock_cursor.limit.return_value = mock_cursor
-    mock_cursor.to_list = AsyncMock(
-        None
-    )
+    mock_cursor.to_list = AsyncMock(None)
     mock_collection.find.return_value = mock_cursor
     mock_db.__getitem__.return_value = mock_collection
     app.dependency_overrides[get_db] = lambda: mock_db
@@ -160,9 +137,7 @@ async def test_fail_get_players():
 async def test_get_player():
     mock_db = MagicMock()
     mock_collection = MagicMock()
-    mock_collection.find_one = AsyncMock(
-        return_value=mock_p1
-    )
+    mock_collection.find_one = AsyncMock(return_value=mock_p1)
     mock_db.__getitem__.return_value = mock_collection
     app.dependency_overrides[get_db] = lambda: mock_db
     async with AsyncClient(

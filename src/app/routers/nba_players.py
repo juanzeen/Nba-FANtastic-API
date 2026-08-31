@@ -1,15 +1,18 @@
 from fastapi import APIRouter, Depends, Path, HTTPException, Query
 from typing import Annotated
 from ..dependencies import get_db
-from ..schemas.players import Player
+from ..schemas.nba_players import Player
 from ..schemas.pagination import PaginationResponse, PaginationParams
 from ..schemas.contants import ResponseDict, ErrorResponseDict
 import math
 
 router = APIRouter(prefix="/players", tags=["Current NBA Players"])
 
-@router.get("/", status_code=200, response_model=PaginationResponse[Player])
-async def get_nba_players(pagination: Annotated[PaginationParams, Query()], db=Depends(get_db)) -> PaginationResponse[Player] | ErrorResponseDict:
+
+@router.get("/", status_code=200)
+async def get_nba_players(
+    pagination: Annotated[PaginationParams, Query()], db=Depends(get_db)
+) -> PaginationResponse[Player] | ErrorResponseDict:
     np = db["players"]
     limit = pagination.limit
     skip = limit * (pagination.page - 1)
@@ -22,13 +25,13 @@ async def get_nba_players(pagination: Annotated[PaginationParams, Query()], db=D
             "message": "Actual NBA players successfully retrieved.",
             "data": players,
             "pagination": {
-            "page": pagination.page,
-            "limit": pagination.limit,
-            "total_items": total_players,
-            "total_pages": total_pages,
-            "has_next": pagination.page < total_pages,
-            "has_previous": pagination.page > 1
-            }
+                "page": pagination.page,
+                "limit": pagination.limit,
+                "total_items": total_players,
+                "total_pages": total_pages,
+                "has_next": pagination.page < total_pages,
+                "has_previous": pagination.page > 1,
+            },
         }
     raise HTTPException(
         status_code=404, detail={"message": "Actual NBA players not found."}
@@ -41,7 +44,7 @@ async def get_nba_player_by_id(
         int, Path(gt=10, lt=10000000, title="ID from the player who will be fetched")
     ],
     db=Depends(get_db),
-) -> ResponseDict | ErrorResponseDict:
+) -> ResponseDict[Player] | ErrorResponseDict:
     np = db["players"]
     player = await np.find_one({"_id": id})
     if player:

@@ -229,9 +229,7 @@ async def test_fail_get_historical_players():
     mock_cursor.sort.return_value = mock_cursor
     mock_cursor.skip.return_value = mock_cursor
     mock_cursor.limit.return_value = mock_cursor
-    mock_cursor.to_list = AsyncMock(
-        return_value=None
-    )
+    mock_cursor.to_list = AsyncMock(return_value=None)
     mock_collection.find.return_value = mock_cursor
     mock_db.__getitem__.return_value = mock_collection
     app.dependency_overrides[get_db] = lambda: mock_db

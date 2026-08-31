@@ -1,7 +1,8 @@
-from typing import TypedDict, Annotated
+from typing import TypedDict, Annotated, Optional
 from pydantic import BaseModel, StringConstraints, BeforeValidator, Field
 
 PyObjectId = Annotated[int, BeforeValidator(int)]
+
 
 class TotalsStats(TypedDict):
     games: int
@@ -38,5 +39,5 @@ class Player(BaseModel):
     position: str
     country: str
     career: TotalsAvg
-    season: TotalsAvg
+    season: Optional[TotalsAvg]
     team: Team

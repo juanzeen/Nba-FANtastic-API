@@ -1,13 +1,14 @@
 from pydantic import BaseModel
-from typing import Annotated, TypedDict
+from typing import TypedDict, Optional
 
 
 class DetailsDict(TypedDict):
-    season: str
-    team: str
+    season: Optional[str]
+    team: Optional[str]
 
 
 class HistoricalRecord(BaseModel):
+    _id: str
     record: str
     value: int | float
     leader_full_name: str

@@ -9,16 +9,16 @@ import math
 
 router = APIRouter(prefix="/historical-players", tags=["Historical Players"])
 
-@router.get("/", status_code=200, response_model=PaginationResponse[HistoricalPlayer])
+
+@router.get("/", status_code=200)
 async def get_historical_players(
-    pagination: Annotated[PaginationParams, Query()],
-    db=Depends(get_db)
+    pagination: Annotated[PaginationParams, Query()], db=Depends(get_db)
 ) -> PaginationResponse[HistoricalPlayer] | ErrorResponseDict:
     hp = db["historical_players"]
     limit = pagination.limit
     skip = (pagination.page - 1) * limit
     total_players = await hp.count_documents({})
-    total_pages = math.ceil(total_players/limit)
+    total_pages = math.ceil(total_players / limit)
     cursor = hp.find({}).sort("_id", 1).skip(skip).limit(limit)
     players = await cursor.to_list()
     if not players:
@@ -34,20 +34,21 @@ async def get_historical_players(
             "total_items": total_players,
             "total_pages": total_pages,
             "has_next": pagination.page < total_pages,
-            "has_previous": pagination.page > 1
+            "has_previous": pagination.page > 1,
         },
-        "data": players
+        "data": players,
     }
 
-@router.get("/{id_or_slug}", status_code=200)
+
+@router.get("/{id}", status_code=200)
 async def get_historical_player_by_id(
-    id_or_slug: Annotated[
+    id: Annotated[
         int, Path(ge=10, lt=1000000, title="_id from the player who will be fetched")
-    ] | Annotated[str, Path(min_length=3, title="Slug from the player who will be fetched")],
+    ],
     db=Depends(get_db),
-) -> ResponseDict | ErrorResponseDict:
+) -> ResponseDict[HistoricalPlayer] | ErrorResponseDict:
     hp = db["historical_players"]
-    player = await hp.find_one({"_id": id_or_slug})
+    player = await hp.find_one({"_id": id})
     if player:
         return {
             "data": player,
@@ -55,5 +56,5 @@ async def get_historical_player_by_id(
         }
 
     raise HTTPException(
-        status_code=404, detail={"message": f"Player with id {id_or_slug} not found."}
+        status_code=404, detail={"message": f"Player with id {id} not found."}
     )
