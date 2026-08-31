@@ -191,6 +191,117 @@ async def test_get_historical_players():
 
 
 @pytest.mark.anyio
+async def test_get_historical_players_custom_pagination():
+    mock_db = MagicMock()
+    mock_collection = MagicMock()
+    mock_cursor = MagicMock()
+    mock_collection.count_documents = AsyncMock(return_value=160)
+    mock_cursor.sort.return_value = mock_cursor
+    mock_cursor.skip.return_value = mock_cursor
+    mock_cursor.limit.return_value = mock_cursor
+    mock_cursor.to_list = AsyncMock(
+        return_value=[mocked_historical_player, mocked_historical_player_2]
+    )
+    mock_collection.find.return_value = mock_cursor
+    mock_db.__getitem__.return_value = mock_collection
+    app.dependency_overrides[get_db] = lambda: mock_db
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as ac:
+        response = await ac.get("/historical-players/?page=2&limit=5")
+        players = response.json().get("data", [])
+        pagination_metadata = response.json().get("pagination", None)
+        message = response.json().get("message", "")
+    app.dependency_overrides.clear()
+    assert response.status_code == 200
+    assert message == "Historical players successfully retrieved."
+    assert pagination_metadata.get("page") == 2
+    assert pagination_metadata.get("limit") == 5
+    assert len(players) > 1
+
+
+@pytest.mark.anyio
+async def test_get_historical_players_pagination_flags_first_page():
+    mock_db = MagicMock()
+    mock_cursor = MagicMock()
+    mock_collection = MagicMock()
+    mock_cursor = MagicMock()
+    mock_collection.count_documents = AsyncMock(return_value=160)
+    mock_cursor.sort.return_value = mock_cursor
+    mock_cursor.skip.return_value = mock_cursor
+    mock_cursor.limit.return_value = mock_cursor
+    mock_cursor.to_list = AsyncMock(
+        return_value=[mocked_historical_player, mocked_historical_player_2]
+    )
+    mock_collection.find.return_value = mock_cursor
+    mock_db.__getitem__.return_value = mock_collection
+    app.dependency_overrides[get_db] = lambda: mock_db
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as ac:
+        response = await ac.get("/historical-players/?limit=10&page=1")
+        pagination_meta = response.json().get("pagination", None)
+    app.dependency_overrides.clear()
+    assert response.status_code == 200
+    assert pagination_meta.get("has_next") == True
+    assert pagination_meta.get("has_previous") == False
+
+
+@pytest.mark.anyio
+async def test_get_historical_players_pagination_flags_last_page():
+    mock_db = MagicMock()
+    mock_cursor = MagicMock()
+    mock_collection = MagicMock()
+    mock_cursor = MagicMock()
+    mock_collection.count_documents = AsyncMock(return_value=160)
+    mock_cursor.sort.return_value = mock_cursor
+    mock_cursor.skip.return_value = mock_cursor
+    mock_cursor.limit.return_value = mock_cursor
+    mock_cursor.to_list = AsyncMock(
+        return_value=[mocked_historical_player, mocked_historical_player_2]
+    )
+    mock_collection.find.return_value = mock_cursor
+    mock_db.__getitem__.return_value = mock_collection
+    app.dependency_overrides[get_db] = lambda: mock_db
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as ac:
+        response = await ac.get("/historical-players/?limit=10&page=16")
+        pagination_meta = response.json().get("pagination", None)
+    app.dependency_overrides.clear()
+    assert response.status_code == 200
+    assert pagination_meta.get("has_next") == False
+    assert pagination_meta.get("has_previous") == True
+
+
+@pytest.mark.anyio
+async def test_get_historical_players_pagination_flags_middle_page():
+    mock_db = MagicMock()
+    mock_cursor = MagicMock()
+    mock_collection = MagicMock()
+    mock_cursor = MagicMock()
+    mock_collection.count_documents = AsyncMock(return_value=160)
+    mock_cursor.sort.return_value = mock_cursor
+    mock_cursor.skip.return_value = mock_cursor
+    mock_cursor.limit.return_value = mock_cursor
+    mock_cursor.to_list = AsyncMock(
+        return_value=[mocked_historical_player, mocked_historical_player_2]
+    )
+    mock_collection.find.return_value = mock_cursor
+    mock_db.__getitem__.return_value = mock_collection
+    app.dependency_overrides[get_db] = lambda: mock_db
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as ac:
+        response = await ac.get("/historical-players/?limit=10&page=10")
+        pagination_meta = response.json().get("pagination", None)
+    app.dependency_overrides.clear()
+    assert response.status_code == 200
+    assert pagination_meta.get("has_next") == True
+    assert pagination_meta.get("has_previous") == True
+
+
+@pytest.mark.anyio
 async def test_fail_get_historical_players():
     mock_db = MagicMock()
     mock_cursor = MagicMock()
@@ -214,6 +325,113 @@ async def test_fail_get_historical_players():
     assert response.status_code == 404
     assert message == "No historical players found."
     assert len(players) == 0
+
+
+@pytest.mark.anyio
+async def test_fail_get_historical_players_page_too_low():
+    mock_db = MagicMock()
+    mock_cursor = MagicMock()
+    mock_collection = MagicMock()
+    mock_cursor = MagicMock()
+    mock_collection.count_documents = AsyncMock(return_value=160)
+    mock_cursor.sort.return_value = mock_cursor
+    mock_cursor.skip.return_value = mock_cursor
+    mock_cursor.limit.return_value = mock_cursor
+    mock_cursor.to_list = AsyncMock(return_value=None)
+    mock_collection.find.return_value = mock_cursor
+    mock_db.__getitem__.return_value = mock_collection
+    app.dependency_overrides[get_db] = lambda: mock_db
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as ac:
+        response = await ac.get("/historical-players/?page=0")
+        error_type = response.json().get("detail")[0].get("type")
+        message = response.json().get("detail")[0].get("msg")
+    app.dependency_overrides.clear()
+    assert response.status_code == 422
+    assert error_type == "greater_than_equal"
+    assert message == "Input should be greater than or equal to 1"
+
+
+@pytest.mark.anyio
+async def test_fail_get_historical_players_limit_zero():
+    mock_db = MagicMock()
+    mock_cursor = MagicMock()
+    mock_collection = MagicMock()
+    mock_cursor = MagicMock()
+    mock_collection.count_documents = AsyncMock(return_value=160)
+    mock_cursor.sort.return_value = mock_cursor
+    mock_cursor.skip.return_value = mock_cursor
+    mock_cursor.limit.return_value = mock_cursor
+    mock_cursor.to_list = AsyncMock(return_value=None)
+    mock_collection.find.return_value = mock_cursor
+    mock_db.__getitem__.return_value = mock_collection
+    app.dependency_overrides[get_db] = lambda: mock_db
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as ac:
+        response = await ac.get("/historical-players/?limit=0")
+        error_type = response.json().get("detail")[0].get("type")
+        message = response.json().get("detail")[0].get("msg")
+    app.dependency_overrides.clear()
+    assert response.status_code == 422
+    assert error_type == "greater_than"
+    assert message == "Input should be greater than 0"
+
+
+@pytest.mark.anyio
+async def test_fail_get_historical_players_page_invalid_type():
+    mock_db = MagicMock()
+    mock_cursor = MagicMock()
+    mock_collection = MagicMock()
+    mock_cursor = MagicMock()
+    mock_collection.count_documents = AsyncMock(return_value=160)
+    mock_cursor.sort.return_value = mock_cursor
+    mock_cursor.skip.return_value = mock_cursor
+    mock_cursor.limit.return_value = mock_cursor
+    mock_cursor.to_list = AsyncMock(return_value=None)
+    mock_collection.find.return_value = mock_cursor
+    mock_db.__getitem__.return_value = mock_collection
+    app.dependency_overrides[get_db] = lambda: mock_db
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as ac:
+        response = await ac.get("/historical-players/?page=abcdedfg")
+        error_type = response.json().get("detail")[0].get("type")
+        message = response.json().get("detail")[0].get("msg")
+    app.dependency_overrides.clear()
+    assert response.status_code == 422
+    assert error_type == "int_parsing"
+    assert (
+        message
+        == "Input should be a valid integer, unable to parse string as an integer"
+    )
+
+
+@pytest.mark.anyio
+async def test_fail_get_historical_players_page_limit_too_high():
+    mock_db = MagicMock()
+    mock_cursor = MagicMock()
+    mock_collection = MagicMock()
+    mock_cursor = MagicMock()
+    mock_collection.count_documents = AsyncMock(return_value=160)
+    mock_cursor.sort.return_value = mock_cursor
+    mock_cursor.skip.return_value = mock_cursor
+    mock_cursor.limit.return_value = mock_cursor
+    mock_cursor.to_list = AsyncMock(return_value=None)
+    mock_collection.find.return_value = mock_cursor
+    mock_db.__getitem__.return_value = mock_collection
+    app.dependency_overrides[get_db] = lambda: mock_db
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as ac:
+        response = await ac.get("/historical-players/?limit=300")
+        error_type = response.json().get("detail")[0].get("type")
+        message = response.json().get("detail")[0].get("msg")
+    app.dependency_overrides.clear()
+    assert response.status_code == 422
+    assert error_type == "less_than_equal"
+    assert message == "Input should be less than or equal to 100"
 
 
 @pytest.mark.anyio
@@ -246,11 +464,45 @@ async def test_fail_get_historical_player_by_id():
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
-        response = await ac.get("/historical-players/200746")
+        response = await ac.get("/historical-players/123123")
         message = response.json().get("detail", "").get("message", "")
     app.dependency_overrides.clear()
     assert response.status_code == 404
-    assert message == "Player with id 200746 not found."
+    assert message == "Player with id 123123 not found."
+
+
+@pytest.mark.anyio
+async def test_fail_get_historical_player_by_id_small_id():
+    mock_db = MagicMock()
+    mock_cursor = MagicMock()
+    mock_cursor.find_one = AsyncMock(return_value=None)
+    mock_db.__getitem__.return_value = mock_cursor
+    app.dependency_overrides[get_db] = lambda: mock_db
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as ac:
+        response = await ac.get("/historical-players/1")
+        message = response.json().get("detail")[0].get("msg")
+    app.dependency_overrides.clear()
+    assert response.status_code == 422
+    assert message == "Input should be greater than or equal to 10"
+
+
+@pytest.mark.anyio
+async def test_fail_get_historical_player_by_id_big_id():
+    mock_db = MagicMock()
+    mock_cursor = MagicMock()
+    mock_cursor.find_one = AsyncMock(return_value=None)
+    mock_db.__getitem__.return_value = mock_cursor
+    app.dependency_overrides[get_db] = lambda: mock_db
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as ac:
+        response = await ac.get("/historical-players/123321987")
+        message = response.json().get("detail")[0].get("msg")
+    app.dependency_overrides.clear()
+    assert response.status_code == 422
+    assert message == "Input should be less than 1000000"
 
 
 @pytest.mark.anyio
@@ -283,8 +535,25 @@ async def test_fail_get_historical_player_by_slug():
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
-        response = await ac.get("/historical-players/search/lamarcus-aldridge")
+        response = await ac.get("/historical-players/search/lamarcuz-aldridg")
         message = response.json().get("detail", "").get("message", "")
     app.dependency_overrides.clear()
     assert response.status_code == 404
-    assert message == "Player with slug lamarcus-aldridge not found."
+    assert message == "Player with slug lamarcuz-aldridg not found."
+
+
+@pytest.mark.anyio
+async def test_fail_get_historical_player_by_too_short():
+    mock_db = MagicMock()
+    mock_cursor = MagicMock()
+    mock_cursor.find_one = AsyncMock(return_value=None)
+    mock_db.__getitem__.return_value = mock_cursor
+    app.dependency_overrides[get_db] = lambda: mock_db
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as ac:
+        response = await ac.get("/historical-players/search/leb")
+        message = response.json().get("detail", "")[0].get("msg", "")
+    app.dependency_overrides.clear()
+    assert response.status_code == 422
+    assert message == "String should have at least 8 characters"

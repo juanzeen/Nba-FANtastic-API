@@ -60,7 +60,24 @@ async def test_fail_get_historical_records():
 
 
 @pytest.mark.anyio
-async def test_get_historical_record_by_id():
+async def test_fail_get_historical_records_empty_array():
+    mock_db = MagicMock()
+    mock_collection = MagicMock()
+    mock_collection.find.return_value = AsyncMock(return_value=[])
+    mock_db.__getitem__.return_value = mock_collection
+    app.dependency_overrides[get_db] = lambda: mock_db
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as ac:
+        response = await ac.get("/historical-records/")
+        message = response.json().get("detail", None).get("message", None)
+    app.dependency_overrides.clear()
+    assert response.status_code == 404
+    assert message == "Historical records not found."
+
+
+@pytest.mark.anyio
+async def test_get_historical_record_by_category():
     mock_db = MagicMock()
     mock_collection = MagicMock()
     mock_collection.find_one = AsyncMock(
@@ -88,7 +105,24 @@ async def test_get_historical_record_by_id():
 
 
 @pytest.mark.anyio
-async def test_fail_get_historical_record_by_id():
+async def test_fail_get_historical_record_by_category_inexistent_category():
+    mock_db = MagicMock()
+    mock_collection = MagicMock()
+    mock_collection.find_one = AsyncMock(return_value=None)
+    mock_db.__getitem__.return_value = mock_collection
+    app.dependency_overrides[get_db] = lambda: mock_db
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as ac:
+        response = await ac.get("/historical-records/AL_TIME_PT")
+        message = response.json().get("detail").get("message", [])
+    app.dependency_overrides.clear()
+    assert response.status_code == 404
+    assert message == "Historical record AL_TIME_PT not found."
+
+
+@pytest.mark.anyio
+async def test_fail_get_historical_record_by_category_short_category():
     mock_db = MagicMock()
     mock_collection = MagicMock()
     mock_collection.find_one = AsyncMock(return_value=None)
@@ -103,4 +137,24 @@ async def test_fail_get_historical_record_by_id():
     app.dependency_overrides.clear()
     assert response.status_code == 422
     assert detail == "string_too_long"
+
     assert message == "String should have at most 13 characters"
+
+
+@pytest.mark.anyio
+async def test_fail_get_historical_record_by_category_long_category():
+    mock_db = MagicMock()
+    mock_collection = MagicMock()
+    mock_collection.find_one = AsyncMock(return_value=None)
+    mock_db.__getitem__.return_value = mock_collection
+    app.dependency_overrides[get_db] = lambda: mock_db
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as ac:
+        response = await ac.get("/historical-records/AA")
+        message = response.json().get("detail")[0].get("msg")
+        detail = response.json().get("detail")[0].get("type")
+    app.dependency_overrides.clear()
+    assert response.status_code == 422
+    assert detail == "string_too_short"
+    assert message == "String should have at least 8 characters"

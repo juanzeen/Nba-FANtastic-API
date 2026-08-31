@@ -43,5 +43,5 @@ async def get_historical_record_by_category(
             "data": record,
         }
     raise HTTPException(
-        status_code=404, detail={"message": f"Historical record: {category} not found."}
+        status_code=404, detail={"message": f"Historical record {category} not found."}
     )
