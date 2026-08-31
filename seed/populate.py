@@ -435,7 +435,7 @@ def populate_nba_players():
     return
 
 
-# populate_historical_records()
+populate_historical_records()
 populate_historical_players()
-# populate_historical_players_seasons()
+populate_historical_players_seasons()
 populate_nba_players()
