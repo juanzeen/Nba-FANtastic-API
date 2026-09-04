@@ -2,8 +2,7 @@ from fastapi import APIRouter, Query, Path, Depends, HTTPException
 from typing import Annotated, Optional, TypedDict
 from ..dependencies import get_db
 from ..schemas.historical_players import HistoricalPlayer
-from ..schemas.pagination import PaginationParams, PaginationResponse
-from ..schemas.contants import ResponseDict, ErrorResponseDict
+from ..schemas.base import ResponseDict, ErrorResponseDict, PaginationParams, PaginationResponse
 from ..utils.strings import format_player_name
 import math
 

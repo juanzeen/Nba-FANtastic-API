@@ -15,7 +15,7 @@ def convert_to_cm(fi: str) -> float:
     return height_cm
 
 
-def get_db_collection(collection_name: str ):
+def get_db_collection(collection_name: str):
     """Initialize and return a MongoDB collection using environment variables."""
     dotenv.load_dotenv()
     db_url = os.getenv("MONGO_URL")
@@ -434,6 +434,8 @@ def populate_nba_players():
         collection.update_one({"_id": player_id}, {"$set": document}, upsert=True)
 
     return
+
+
 def extract_player_season(
     player_id: int, season_year: str, is_playoffs: bool = False
 ) -> dict | None:
@@ -457,10 +459,14 @@ def extract_player_season(
         return None
 
     if df.empty:
-        print(f"No games found for player {player_id} in {season_year} ({season_type}).")
+        print(
+            f"No games found for player {player_id} in {season_year} ({season_type})."
+        )
         return None
 
-    df["formatted_date"] = pd.to_datetime(df["GAME_DATE"], format="%b %d, %Y").dt.strftime("%Y-%m-%d")
+    df["formatted_date"] = pd.to_datetime(
+        df["GAME_DATE"], format="%b %d, %Y"
+    ).dt.strftime("%Y-%m-%d")
     df["is_home"] = df["MATCHUP"].str.contains("vs.")
     df["opponent"] = df["MATCHUP"].apply(lambda x: x.split()[-1])
     df["team_abbr"] = df["MATCHUP"].apply(lambda x: x.split()[0])
@@ -545,9 +551,15 @@ def extract_player_season(
                 "reb": int(row["REB"]),
                 "stl": int(row["STL"]),
                 "blk": int(row["BLK"]),
-                "fg_pct": round(float(row["FG_PCT"]), 3) if pd.notna(row["FG_PCT"]) else 0.0,
-                "fg3_pct": round(float(row["FG3_PCT"]), 3) if pd.notna(row["FG3_PCT"]) else 0.0,
-                "ft_pct": round(float(row["FT_PCT"]), 3) if pd.notna(row["FT_PCT"]) else 0.0,
+                "fg_pct": round(float(row["FG_PCT"]), 3)
+                if pd.notna(row["FG_PCT"])
+                else 0.0,
+                "fg3_pct": round(float(row["FG3_PCT"]), 3)
+                if pd.notna(row["FG3_PCT"])
+                else 0.0,
+                "ft_pct": round(float(row["FT_PCT"]), 3)
+                if pd.notna(row["FT_PCT"])
+                else 0.0,
             }
         )
 
@@ -571,17 +583,21 @@ def upload_player_season(doc: dict, db):
         {"$set": doc},
         upsert=True,
     )
-    print(f"Saved: {doc['_id']} ({doc['team']['abbreviation']}, {doc['season_totals']['games_played']} games)")
+    print(
+        f"Saved: {doc['_id']} ({doc['team']['abbreviation']}, {doc['season_totals']['games_played']} games)"
+    )
 
 
 def sync_player_seasons(pid: int, seasons: list[str], is_playoffs: bool = False):
     """Extract and upload seasons for multiple players with polite request pacing."""
     collection = get_db_collection("players_seasons")
     for season in seasons:
-            print(f"\nProcessing Player {pid} for season {season}...")
-            doc = extract_player_season(player_id=pid, season_year=season, is_playoffs=is_playoffs)
-            if doc:
-                collection.update_one(
+        print(f"\nProcessing Player {pid} for season {season}...")
+        doc = extract_player_season(
+            player_id=pid, season_year=season, is_playoffs=is_playoffs
+        )
+        if doc:
+            collection.update_one(
                 {"_id": f"{pid}_{season}"},
                 {
                     "$set": doc,
@@ -589,12 +605,14 @@ def sync_player_seasons(pid: int, seasons: list[str], is_playoffs: bool = False)
                 upsert=True,
             )
 
-            time.sleep(1.5)
+        time.sleep(1.5)
+
 
 def increment_season(a: str, b: str) -> str:
     na = int(a) + 1
     nb = int(b) + 1
     return f"{na}-{nb}"
+
 
 def career_span_to_seasons_list(span: str) -> list[str]:
     start_season = span[:7]
@@ -620,6 +638,7 @@ def populate_player_seasons():
         career_span = df.at[idx, "Career Span"]
         seasons = career_span_to_seasons_list(career_span)
         sync_player_seasons(pid, seasons)
+
 
 # populate_historical_records()
 # populate_historical_players()

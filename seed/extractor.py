@@ -14,6 +14,7 @@ import os
 def normalize_name(name: str):
     return name.lower().replace("-", "").replace("'", "")
 
+
 def is_legendary_player(
     points, rebs, asts, mvp_count, all_star_participations, finals_mvp_count, min_games
 ) -> bool:
@@ -29,10 +30,12 @@ def is_legendary_player(
     )
     return volume_conditions or peak_conditions
 
+
 def convert_to_cm(fi: str) -> float:
     feet, inch = fi.split("-")
     height_cm = round((int(feet) * 30.48) + (int(inch) * 2.54))
     return height_cm
+
 
 def extract_legendary_players():
     file_name = "nba_legends.csv"
@@ -231,6 +234,7 @@ def extract_legendary_players():
             f"\nSucesso! O arquivo '{file_name}' foi totalmente atualizado com as novas estatísticas e picos."
         )
 
+
 def update_legends_career_data(file_name="nba_legends.csv"):
     """
     Centralized function to update NBA legends data with complete career statistics,
@@ -370,6 +374,7 @@ def update_legends_career_data(file_name="nba_legends.csv"):
         f"\nSucesso! O arquivo nba_legends.csv foi totalmente atualizado contemplando todas as colunas."
     )
 
+
 def get_all_time_leaders():
     endpoints = [
         alltimeleadersgrids.AllTimeLeadersGrids().ast_leaders,
@@ -397,6 +402,7 @@ def get_all_time_leaders():
         except Exception as e:
             print(e)
     pd.DataFrame(leaders).to_csv("all_time_leaders.csv", index=False)
+
 
 def extract_current_nba_players():
     all_players_data = players.get_players()
@@ -507,6 +513,7 @@ def extract_current_nba_players():
             except Exception as e:
                 print(e)
 
+
 def append_player_slug_actual_players():
     df = pd.read_csv("nba_players.csv")
     ids = df["ID"].tolist()
@@ -523,6 +530,7 @@ def append_player_slug_actual_players():
         df.at[idx, "Player Slug"] = slug
     df.to_csv("nba_players.csv", index=False)
 
+
 def append_player_career_span_actual_players():
     df = pd.read_csv("nba_players.csv")
     ids = df["ID"].tolist()
@@ -530,17 +538,16 @@ def append_player_career_span_actual_players():
         player_matches = df[df["ID"].astype(str) == str(id)]
         if player_matches.empty:
             continue
-        df_career = playercareerstats.PlayerCareerStats(player_id=id).get_data_frames()[0]
+        df_career = playercareerstats.PlayerCareerStats(player_id=id).get_data_frames()[
+            0
+        ]
         idx = player_matches.index[0]
         full_name = df.at[idx, "Full Name"]
-        career_span = (
-                f"{df_career['SEASON_ID'].min()} - {df_career['SEASON_ID'].max()}"
-            )
+        career_span = f"{df_career['SEASON_ID'].min()} - {df_career['SEASON_ID'].max()}"
         print(f"Adding career for {full_name} | {career_span} ")
         df.at[idx, "Career Span"] = career_span
         time.sleep(1.5)
     df.to_csv("nba_players.csv", index=False)
-
 
 
 append_player_career_span_actual_players()

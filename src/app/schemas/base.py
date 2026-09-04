@@ -1,8 +1,15 @@
+from typing import TypedDict, Generic, TypeVar
 from pydantic import BaseModel, Field
-from typing import Generic, TypeVar
 
 T = TypeVar("T")
 
+
+class ResponseDict(TypedDict, Generic[T]):
+    data: T
+    message: str
+
+class ErrorResponseDict(TypedDict):
+    detail: dict[str, str]
 
 class PaginationParams(BaseModel):
     page: int = Field(1, ge=1)

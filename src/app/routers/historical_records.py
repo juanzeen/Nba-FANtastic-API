@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Path, HTTPException
 from typing import Annotated
 from ..dependencies import get_db
 from ..schemas.historical_records import HistoricalRecord
-from ..schemas.contants import ResponseDict, ErrorResponseDict
+from ..schemas.base import ResponseDict, ErrorResponseDict
 
 router = APIRouter(prefix="/historical-records", tags=["Historical Records"])
 
