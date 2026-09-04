@@ -3,13 +3,17 @@ from pydantic import BaseModel, Field
 
 T = TypeVar("T")
 
+class ErrorMessage(BaseModel):
+    message: str
 
 class ResponseDict(TypedDict, Generic[T]):
     data: T
     message: str
 
+
 class ErrorResponseDict(TypedDict):
-    detail: dict[str, str]
+    detail: ErrorMessage
+
 
 class PaginationParams(BaseModel):
     page: int = Field(1, ge=1)
