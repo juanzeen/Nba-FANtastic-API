@@ -323,7 +323,7 @@ async def test_fail_get_historical_players():
         message = response.json().get("detail", "").get("message", "")
     app.dependency_overrides.clear()
     assert response.status_code == 404
-    assert message == "No historical players found."
+    assert message == "Historical players not found."
     assert len(players) == 0
 
 
@@ -543,7 +543,7 @@ async def test_fail_get_historical_player_by_slug():
 
 
 @pytest.mark.anyio
-async def test_fail_get_historical_player_by_too_short():
+async def test_fail_get_historical_player_by_id_too_short():
     mock_db = MagicMock()
     mock_cursor = MagicMock()
     mock_cursor.find_one = AsyncMock(return_value=None)
