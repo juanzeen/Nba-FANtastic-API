@@ -41,6 +41,7 @@ mock_p1 = {
     },
     "team": {"abbreviation": "SAC", "name": "Sacramento Kings"},
     "slug": "precious-achiuwa",
+    "career_span": "2020-21 - 2021-21"
 }
 mock_p2 = {
     "_id": 30212,
@@ -79,6 +80,7 @@ mock_p2 = {
     },
     "team": {"abbreviation": "SAC", "name": "Sacramento Kings"},
     "slug": "precious-achiuwa",
+    "career_span": "2020-21 - 2021-21"
 }
 
 
