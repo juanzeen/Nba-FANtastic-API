@@ -2,6 +2,7 @@ services:
   mongodb:
     image: mongodb/mongodb-atlas-local
     hostname: mongodb
+    restart: always
     environment:
       - MONGODB_INITDB_ROOT_USERNAME=${MONGO_DB_USER:-user}
       - MONGODB_INITDB_ROOT_PASSWORD=${MONGO_DB_PASSWORD:-password}
