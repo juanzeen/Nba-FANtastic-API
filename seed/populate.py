@@ -374,6 +374,7 @@ def populate_nba_players():
         p_slug = row.get("Player Slug")
         p_pos = row.get("Position")
         p_country = row.get("Country")
+        career_span = clean_str(row.get("Career Span"))
         p_height = row.get("Height")
         team_abb = row.get("Team Abbreviation")
         team_full_name = row.get("Team Full Name")
@@ -395,6 +396,7 @@ def populate_nba_players():
             "position": p_pos,
             "country": p_country,
             "height": p_height,
+            "career_span": career_span,
             "team": {"abbreviation": team_abb, "name": team_full_name},
             "career": {
                 "totals": {
@@ -432,9 +434,6 @@ def populate_nba_players():
             },
         }
         collection.update_one({"_id": player_id}, {"$set": document}, upsert=True)
-
-    return
-
 
 def extract_player_season(
     player_id: int, season_year: str, is_playoffs: bool = False
@@ -640,8 +639,8 @@ def populate_player_seasons():
         sync_player_seasons(pid, seasons)
 
 
-# populate_historical_records()
-# populate_historical_players()
-# populate_historical_players_seasons()
-# populate_nba_players()
+populate_historical_records()
+populate_historical_players()
+populate_historical_players_seasons()
+populate_nba_players()
 populate_player_seasons()

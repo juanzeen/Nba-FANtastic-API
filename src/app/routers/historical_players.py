@@ -1,15 +1,13 @@
-from fastapi import APIRouter, Query, Path, Depends, HTTPException
-from typing import Annotated, Optional, TypedDict
-from ..dependencies import get_db
+from fastapi import APIRouter, Query, Path, HTTPException
+from typing import Annotated
+from ..dependencies import DbDependency
 from ..schemas.historical_players import HistoricalPlayer
 from ..schemas.base import (
     ResponseDict,
-    ErrorMessage,
     ErrorResponseDict,
     PaginationParams,
     PaginationResponse,
 )
-from ..utils.strings import format_player_name
 import math
 
 router = APIRouter(prefix="/historical-players", tags=["Historical Players"])
@@ -22,7 +20,7 @@ router = APIRouter(prefix="/historical-players", tags=["Historical Players"])
      }
 })
 async def get_historical_players(
-    pagination: Annotated[PaginationParams, Query()], db=Depends(get_db)
+    pagination: Annotated[PaginationParams, Query()], db: DbDependency
 ) -> PaginationResponse[HistoricalPlayer] | ErrorResponseDict:
     hp = db["historical_players"]
     limit = pagination.limit
@@ -60,7 +58,7 @@ async def get_historical_player_by_id(
     id: Annotated[
         int, Path(ge=10, lt=1000000, title="_id from the player who will be fetched")
     ],
-    db=Depends(get_db),
+    db: DbDependency,
 ) -> ResponseDict[HistoricalPlayer] | ErrorResponseDict:
     hp = db["historical_players"]
     player = await hp.find_one({"_id": id})
@@ -90,7 +88,7 @@ async def get_historical_player_by_slug(
             description="Slug must be in the format name-lastname",
         ),
     ],
-    db=Depends(get_db),
+    db: DbDependency,
 ):
     hp = db["historical_players"]
     player = await hp.find_one({"slug": slug})

@@ -227,3 +227,4 @@ dump/*
 notebook.py
 seed/notebook.py
 schemas.md
+seasons_dump/

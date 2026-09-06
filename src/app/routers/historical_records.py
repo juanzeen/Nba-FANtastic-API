@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Path, HTTPException
 from typing import Annotated
-from ..dependencies import get_db
+from ..dependencies import DbDependency
 from ..schemas.historical_records import HistoricalRecord
 from ..schemas.base import ResponseDict, ErrorResponseDict
 
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/historical-records", tags=["Historical Records"])
      }
 })
 async def get_historical_records(
-    db=Depends(get_db),
+    db: DbDependency,
 ) -> ResponseDict[list[HistoricalRecord]] | ErrorResponseDict:
     hr = db["historical_records"]
     records = await hr.find({}, {"_id": 0}).to_list()
@@ -43,7 +43,7 @@ async def get_historical_record_by_category(
             title="Specific category to be retrieved from DB",
         ),
     ],
-    db=Depends(get_db),
+    db: DbDependency,
 ) -> ResponseDict[HistoricalRecord] | ErrorResponseDict:
     hr = db["historical_records"]
     record = await hr.find_one({"record": category}, {"_id": 0})
