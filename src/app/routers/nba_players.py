@@ -1,17 +1,31 @@
 from fastapi import APIRouter, Depends, Path, HTTPException, Query
 from typing import Annotated
-from ..dependencies import get_db
+from ..dependencies import DbDependency
 from ..schemas.nba_players import Player
-from ..schemas.pagination import PaginationResponse, PaginationParams
-from ..schemas.contants import ResponseDict, ErrorResponseDict
+from ..schemas.player_seasons import PlayerSeason
+from ..schemas.base import (
+    ResponseDict,
+    ErrorResponseDict,
+    PaginationResponse,
+    PaginationParams,
+)
 import math
 
 router = APIRouter(prefix="/players", tags=["Current NBA Players"])
 
 
-@router.get("/", status_code=200)
+@router.get(
+    "/",
+    status_code=200,
+    responses={
+        404: {
+            "model": ErrorResponseDict,
+            "description": "Actual NBA players not found.",
+        }
+    },
+)
 async def get_nba_players(
-    pagination: Annotated[PaginationParams, Query()], db=Depends(get_db)
+    pagination: Annotated[PaginationParams, Query()], db: DbDependency
 ) -> PaginationResponse[Player] | ErrorResponseDict:
     np = db["players"]
     limit = pagination.limit
@@ -38,12 +52,21 @@ async def get_nba_players(
     )
 
 
-@router.get("/{id}", status_code=200)
+@router.get(
+    "/{id}",
+    status_code=200,
+    responses={
+        404: {
+            "model": ErrorResponseDict,
+            "description": "Actual NBA player with id xx not found.",
+        }
+    },
+)
 async def get_nba_player_by_id(
     id: Annotated[
         int, Path(gt=10, lt=10000000, title="ID from the player who will be fetched")
     ],
-    db=Depends(get_db),
+    db: DbDependency,
 ) -> ResponseDict[Player] | ErrorResponseDict:
     np = db["players"]
     player = await np.find_one({"_id": id})
@@ -54,7 +77,16 @@ async def get_nba_player_by_id(
     )
 
 
-@router.get("/search/{slug}", status_code=200)
+@router.get(
+    "/search/{slug}",
+    status_code=200,
+    responses={
+        404: {
+            "model": ErrorResponseDict,
+            "description": "Actual NBA player with slug xxx-xxxx not found.",
+        }
+    },
+)
 async def get_nba_player_by_slug(
     slug: Annotated[
         str,
@@ -64,7 +96,7 @@ async def get_nba_player_by_slug(
             description="Slug in the format name-lastname",
         ),
     ],
-    db=Depends(get_db),
+    db: DbDependency,
 ) -> ResponseDict[Player] | ErrorResponseDict:
     np = db["players"]
     player = await np.find_one({"slug": slug})
@@ -72,4 +104,89 @@ async def get_nba_player_by_slug(
         return {"message": "Player successfully retrieved.", "data": player}
     raise HTTPException(
         status_code=404, detail={"message": f"Player with slug {slug} not found."}
+    )
+
+
+# Seasons
+@router.get(
+    "/{player_id}/seasons",
+    status_code=200,
+    responses={
+        404: {
+            "model": ErrorResponseDict,
+            "description": "Seasons from player with id xx not found.",
+        }
+    },
+)
+async def get_nba_player_seasons(
+    player_id: Annotated[
+        int, Path(gt=10, lt=10000000, title="ID from the player who will be fetched.")
+    ],
+    pagination: Annotated[PaginationParams, Query()],
+    db: DbDependency,
+) -> PaginationResponse[PlayerSeason] | ErrorResponseDict:
+    ps = db["players_seasons"]
+    limit = pagination.limit
+    skip = limit * (pagination.page - 1)
+    total_seasons = await ps.count_documents({"player_id": player_id})
+    total_pages = math.ceil(total_seasons / limit)
+    cursor = ps.find({"player_id": player_id}).sort("_id", 1).skip(skip).limit(limit)
+    seasons = await cursor.to_list()
+
+    if seasons and len(seasons) > 0:
+        return {
+            "message": f"Seasons from player with id {player_id} successfully retrieved.",
+            "data": seasons,
+            "pagination": {
+                "page": pagination.page,
+                "limit": pagination.limit,
+                "total_items": total_seasons,
+                "total_pages": total_pages,
+                "has_next": pagination.page < total_pages,
+                "has_previous": pagination.page > 1,
+            },
+        }
+
+    raise HTTPException(
+        status_code=404,
+        detail={"message": f"Seasons from player with id {player_id} not found."},
+    )
+
+
+@router.get(
+    "/{player_id}/seasons/{season_year}",
+    status_code=200,
+    responses={
+        404: {
+            "model": ErrorResponseDict,
+            "description": "Season xxxx-xx from player with id xx not found.",
+        }
+    },
+)
+async def get_nba_player_season_by_year(
+    player_id: Annotated[
+        int, Path(gt=10, lt=10000000, title="ID from the player who will be fetched.")
+    ],
+    season_year: Annotated[
+        str,
+        Path(
+            min_length=7,
+            max_length=7,
+            title="ID from the season which will be fetched.",
+        ),
+    ],
+    db: DbDependency,
+) -> ResponseDict[PlayerSeason] | ErrorResponseDict:
+    ps = db["players_seasons"]
+    season = await ps.find_one({"player_id": player_id, "season_year": season_year})
+    if season:
+        return {
+            "message": f"Season {season_year} from player with id {player_id} successfully retrieved.",
+            "data": season,
+        }
+    raise HTTPException(
+        status_code=404,
+        detail={
+            "message": f"Season {season_year} from player with id {player_id} not found."
+        },
     )

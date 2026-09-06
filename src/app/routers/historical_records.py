@@ -1,15 +1,24 @@
 from fastapi import APIRouter, Depends, Path, HTTPException
 from typing import Annotated
-from ..dependencies import get_db
+from ..dependencies import DbDependency
 from ..schemas.historical_records import HistoricalRecord
-from ..schemas.contants import ResponseDict, ErrorResponseDict
+from ..schemas.base import ResponseDict, ErrorResponseDict
 
 router = APIRouter(prefix="/historical-records", tags=["Historical Records"])
 
 
-@router.get("/", status_code=200)
+@router.get(
+    "/",
+    status_code=200,
+    responses={
+        404: {
+            "model": ErrorResponseDict,
+            "description": "Historical records not found.",
+        }
+    },
+)
 async def get_historical_records(
-    db=Depends(get_db),
+    db: DbDependency,
 ) -> ResponseDict[list[HistoricalRecord]] | ErrorResponseDict:
     hr = db["historical_records"]
     records = await hr.find({}, {"_id": 0}).to_list()
@@ -23,7 +32,16 @@ async def get_historical_records(
     )
 
 
-@router.get("/{category}", status_code=200)
+@router.get(
+    "/{category}",
+    status_code=200,
+    responses={
+        404: {
+            "model": ErrorResponseDict,
+            "description": "Historical record with category xxxx not found.",
+        }
+    },
+)
 async def get_historical_record_by_category(
     category: Annotated[
         str,
@@ -33,7 +51,7 @@ async def get_historical_record_by_category(
             title="Specific category to be retrieved from DB",
         ),
     ],
-    db=Depends(get_db),
+    db: DbDependency,
 ) -> ResponseDict[HistoricalRecord] | ErrorResponseDict:
     hr = db["historical_records"]
     record = await hr.find_one({"record": category}, {"_id": 0})

@@ -1,18 +1,30 @@
-from fastapi import APIRouter, Query, Path, Depends, HTTPException
-from typing import Annotated, Optional, TypedDict
-from ..dependencies import get_db
+from fastapi import APIRouter, Query, Path, HTTPException
+from typing import Annotated
+from ..dependencies import DbDependency
 from ..schemas.historical_players import HistoricalPlayer
-from ..schemas.pagination import PaginationParams, PaginationResponse
-from ..schemas.contants import ResponseDict, ErrorResponseDict
-from ..utils.strings import format_player_name
+from ..schemas.base import (
+    ResponseDict,
+    ErrorResponseDict,
+    PaginationParams,
+    PaginationResponse,
+)
 import math
 
 router = APIRouter(prefix="/historical-players", tags=["Historical Players"])
 
 
-@router.get("/", status_code=200)
+@router.get(
+    "/",
+    status_code=200,
+    responses={
+        404: {
+            "model": ErrorResponseDict,
+            "description": "Historical players not found.",
+        }
+    },
+)
 async def get_historical_players(
-    pagination: Annotated[PaginationParams, Query()], db=Depends(get_db)
+    pagination: Annotated[PaginationParams, Query()], db: DbDependency
 ) -> PaginationResponse[HistoricalPlayer] | ErrorResponseDict:
     hp = db["historical_players"]
     limit = pagination.limit
@@ -23,7 +35,7 @@ async def get_historical_players(
     players = await cursor.to_list()
     if not players:
         raise HTTPException(
-            status_code=404, detail={"message": "No historical players found."}
+            status_code=404, detail={"message": "Historical players not found."}
         )
 
     return {
@@ -40,12 +52,21 @@ async def get_historical_players(
     }
 
 
-@router.get("/{id}", status_code=200)
+@router.get(
+    "/{id}",
+    status_code=200,
+    responses={
+        404: {
+            "model": ErrorResponseDict,
+            "description": "Historical player with id xx not found.",
+        }
+    },
+)
 async def get_historical_player_by_id(
     id: Annotated[
         int, Path(ge=10, lt=1000000, title="_id from the player who will be fetched")
     ],
-    db=Depends(get_db),
+    db: DbDependency,
 ) -> ResponseDict[HistoricalPlayer] | ErrorResponseDict:
     hp = db["historical_players"]
     player = await hp.find_one({"_id": id})
@@ -60,8 +81,17 @@ async def get_historical_player_by_id(
     )
 
 
-@router.get("/search/{slug}", status_code=200)
-async def get_historical_player_by_name(
+@router.get(
+    "/search/{slug}",
+    status_code=200,
+    responses={
+        404: {
+            "model": ErrorResponseDict,
+            "description": "Historical player with slug xxxx-xxxx not found.",
+        }
+    },
+)
+async def get_historical_player_by_slug(
     slug: Annotated[
         str,
         Path(
@@ -70,7 +100,7 @@ async def get_historical_player_by_name(
             description="Slug must be in the format name-lastname",
         ),
     ],
-    db=Depends(get_db),
+    db: DbDependency,
 ):
     hp = db["historical_players"]
     player = await hp.find_one({"slug": slug})

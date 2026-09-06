@@ -38,6 +38,7 @@ class Player(BaseModel):
     height: int
     position: str
     country: str
+    career_span: str
     career: TotalsAvg
     season: TotalsAvg
     team: Team

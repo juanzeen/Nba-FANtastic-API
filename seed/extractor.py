@@ -18,6 +18,10 @@ def normalize_name(name: str):
 def is_legendary_player(
     points, rebs, asts, mvp_count, all_star_participations, finals_mvp_count, min_games
 ) -> bool:
+    """
+    Personal filter to set historical players only based in stats and individual awards. Filter must be improved and include players who
+    win at least 1 MVP.
+    """
     volume_conditions = (
         points >= 25000 or rebs >= 8000 or asts >= 7000
     ) and min_games >= 460
@@ -527,4 +531,23 @@ def append_player_slug_actual_players():
     df.to_csv("nba_players.csv", index=False)
 
 
-append_player_slug_actual_players()
+def append_player_career_span_actual_players():
+    df = pd.read_csv("nba_players.csv")
+    ids = df["ID"].tolist()
+    for id in ids:
+        player_matches = df[df["ID"].astype(str) == str(id)]
+        if player_matches.empty:
+            continue
+        df_career = playercareerstats.PlayerCareerStats(player_id=id).get_data_frames()[
+            0
+        ]
+        idx = player_matches.index[0]
+        full_name = df.at[idx, "Full Name"]
+        career_span = f"{df_career['SEASON_ID'].min()} - {df_career['SEASON_ID'].max()}"
+        print(f"Adding career for {full_name} | {career_span} ")
+        df.at[idx, "Career Span"] = career_span
+        time.sleep(1.5)
+    df.to_csv("nba_players.csv", index=False)
+
+
+append_player_career_span_actual_players()

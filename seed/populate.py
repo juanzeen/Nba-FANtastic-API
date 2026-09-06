@@ -5,7 +5,8 @@ import dotenv
 import pandas as pd
 import numpy as np
 from pymongo import MongoClient
-from nba_api.stats.endpoints import playercareerstats
+from nba_api.stats.endpoints import playercareerstats, playergamelog
+from nba_api.stats.static import teams
 
 
 def convert_to_cm(fi: str) -> float:
@@ -14,7 +15,7 @@ def convert_to_cm(fi: str) -> float:
     return height_cm
 
 
-def get_db_collection(collection_name: str = "historical_players"):
+def get_db_collection(collection_name: str):
     """Initialize and return a MongoDB collection using environment variables."""
     dotenv.load_dotenv()
     db_url = os.getenv("MONGO_URL")
@@ -373,6 +374,7 @@ def populate_nba_players():
         p_slug = row.get("Player Slug")
         p_pos = row.get("Position")
         p_country = row.get("Country")
+        career_span = clean_str(row.get("Career Span"))
         p_height = row.get("Height")
         team_abb = row.get("Team Abbreviation")
         team_full_name = row.get("Team Full Name")
@@ -388,12 +390,13 @@ def populate_nba_players():
         avg_steals = row.get("Avg Steals")
         avg_blocks = row.get("Avg Blocks")
         document = {
-            "id": player_id,
+            "_id": player_id,
             "full_name": full_name,
             "slug": p_slug,
             "position": p_pos,
             "country": p_country,
             "height": p_height,
+            "career_span": career_span,
             "team": {"abbreviation": team_abb, "name": team_full_name},
             "career": {
                 "totals": {
@@ -432,10 +435,213 @@ def populate_nba_players():
         }
         collection.update_one({"_id": player_id}, {"$set": document}, upsert=True)
 
-    return
+
+def extract_player_season(
+    player_id: int, season_year: str, is_playoffs: bool = False
+) -> dict | None:
+    """
+    Fetch all games for a specific player in a given season using PlayerGameLog,
+    and format the data matching the player_seasons collection schema.
+    """
+    season_type = "Playoffs" if is_playoffs else "Regular Season"
+
+    try:
+        print(f"Trying to get logs for player {player_id}")
+        log = playergamelog.PlayerGameLog(
+            player_id=player_id,
+            season=season_year,
+            season_type_all_star=season_type,
+            timeout=30,
+        )
+        df = log.get_data_frames()[0]
+    except Exception as e:
+        print(f"Error fetching game logs for player {player_id} ({season_year}): {e}")
+        return None
+
+    if df.empty:
+        print(
+            f"No games found for player {player_id} in {season_year} ({season_type})."
+        )
+        return None
+
+    df["formatted_date"] = pd.to_datetime(
+        df["GAME_DATE"], format="%b %d, %Y"
+    ).dt.strftime("%Y-%m-%d")
+    df["is_home"] = df["MATCHUP"].str.contains("vs.")
+    df["opponent"] = df["MATCHUP"].apply(lambda x: x.split()[-1])
+    df["team_abbr"] = df["MATCHUP"].apply(lambda x: x.split()[0])
+
+    primary_team_abbr = df["team_abbr"].mode()[0]
+    team_data = teams.find_team_by_abbreviation(primary_team_abbr)
+    team_dict = {
+        "abbreviation": primary_team_abbr,
+        "name": team_data["full_name"] if team_data else primary_team_abbr,
+    }
+
+    gp = len(df)
+    totals = {
+        "games_played": gp,
+        "pts": int(df["PTS"].sum()),
+        "ast": int(df["AST"].sum()),
+        "reb": int(df["REB"].sum()),
+        "stl": int(df["STL"].sum()),
+        "blk": int(df["BLK"].sum()),
+    }
+
+    averages = {
+        "pts": round(totals["pts"] / gp, 1) if gp > 0 else 0.0,
+        "ast": round(totals["ast"] / gp, 1) if gp > 0 else 0.0,
+        "reb": round(totals["reb"] / gp, 1) if gp > 0 else 0.0,
+        "stl": round(totals["stl"] / gp, 1) if gp > 0 else 0.0,
+        "blk": round(totals["blk"] / gp, 1) if gp > 0 else 0.0,
+    }
+
+    def get_peak(stat_col):
+        if df.empty or df[stat_col].max() == 0:
+            top_row = df.iloc[0]
+            val = 0
+        else:
+            top_row = df.loc[df[stat_col].idxmax()]
+            val = int(top_row[stat_col])
+
+        return {
+            "value": val,
+            "date": str(top_row["formatted_date"]),
+            "opponent": str(top_row["opponent"]),
+            "game_id": int(top_row["Game_ID"]),
+        }
+
+    peaks = {
+        "max_pts": get_peak("PTS"),
+        "max_ast": get_peak("AST"),
+        "max_reb": get_peak("REB"),
+        "max_stl": get_peak("STL"),
+        "max_blk": get_peak("BLK"),
+    }
+
+    perf_vs_teams = []
+    for opp, group in df.groupby("opponent"):
+        perf_vs_teams.append(
+            {
+                "team": opp,
+                "games_played": len(group),
+                "avg_pts": round(float(group["PTS"].mean()), 1),
+                "avg_ast": round(float(group["AST"].mean()), 1),
+                "avg_reb": round(float(group["REB"].mean()), 1),
+                "avg_blk": round(float(group["BLK"].mean()), 1),
+                "avg_stl": round(float(group["STL"].mean()), 1),
+            }
+        )
+    perf_vs_teams.sort(key=lambda x: x["team"])
+
+    games = []
+    df_sorted = df.sort_values(by="GAME_DATE", ascending=True)
+    for _, row in df_sorted.iterrows():
+        games.append(
+            {
+                "game_id": int(row["Game_ID"]),
+                "date": row["formatted_date"],
+                "opponent": row["opponent"],
+                "result": str(row["WL"]),
+                "is_home": bool(row["is_home"]),
+                "playoffs": is_playoffs,
+                "minutes": str(row["MIN"]),
+                "pts": int(row["PTS"]),
+                "ast": int(row["AST"]),
+                "reb": int(row["REB"]),
+                "stl": int(row["STL"]),
+                "blk": int(row["BLK"]),
+                "fg_pct": round(float(row["FG_PCT"]), 3)
+                if pd.notna(row["FG_PCT"])
+                else 0.0,
+                "fg3_pct": round(float(row["FG3_PCT"]), 3)
+                if pd.notna(row["FG3_PCT"])
+                else 0.0,
+                "ft_pct": round(float(row["FT_PCT"]), 3)
+                if pd.notna(row["FT_PCT"])
+                else 0.0,
+            }
+        )
+
+    return {
+        "player_id": player_id,
+        "season_year": season_year,
+        "team": team_dict,
+        "season_totals": totals,
+        "season_averages": averages,
+        "season_peaks": peaks,
+        "performance_vs_teams": perf_vs_teams,
+        "games": games,
+    }
+
+
+def upload_player_season(doc: dict, db):
+    """Upsert a player season document into the player_seasons collection."""
+    collection = db["player_seasons"]
+    collection.update_one(
+        {"_id": doc["_id"]},
+        {"$set": doc},
+        upsert=True,
+    )
+    print(
+        f"Saved: {doc['_id']} ({doc['team']['abbreviation']}, {doc['season_totals']['games_played']} games)"
+    )
+
+
+def sync_player_seasons(pid: int, seasons: list[str], is_playoffs: bool = False):
+    """Extract and upload seasons for multiple players with polite request pacing."""
+    collection = get_db_collection("players_seasons")
+    for season in seasons:
+        print(f"\nProcessing Player {pid} for season {season}...")
+        doc = extract_player_season(
+            player_id=pid, season_year=season, is_playoffs=is_playoffs
+        )
+        if doc:
+            collection.update_one(
+                {"_id": f"{pid}_{season}"},
+                {
+                    "$set": doc,
+                },
+                upsert=True,
+            )
+
+        time.sleep(1.5)
+
+
+def increment_season(a: str, b: str) -> str:
+    na = int(a) + 1
+    nb = int(b) + 1
+    return f"{na}-{nb}"
+
+
+def career_span_to_seasons_list(span: str) -> list[str]:
+    start_season = span[:7]
+    last_season = span[-7:]
+    seasons = []
+    current_season = start_season
+    while current_season != last_season:
+        seasons.append(current_season)
+        a, b = current_season.split("-")
+        current_season = increment_season(a, b)
+    seasons.append(last_season)
+    return seasons
+
+
+def populate_player_seasons():
+    df = pd.read_csv("nba_players.csv")
+    pids = df["ID"].tolist()[23:]
+    for pid in pids:
+        player_matches = df[df["ID"].astype(str) == str(pid)]
+        if player_matches.empty:
+            continue
+        idx = player_matches.index[0]
+        career_span = df.at[idx, "Career Span"]
+        seasons = career_span_to_seasons_list(career_span)
+        sync_player_seasons(pid, seasons)
 
 
 populate_historical_records()
 populate_historical_players()
 populate_historical_players_seasons()
 populate_nba_players()
+populate_player_seasons()
