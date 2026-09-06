@@ -190,3 +190,35 @@ async def get_nba_player_season_by_year(
             "message": f"Season {season_year} from player with id {player_id} not found."
         },
     )
+
+
+@router.get("/team/{team_abb}", status_code=200,   responses={
+        404: {
+            "model": ErrorResponseDict,
+            "description": "Players from team XXX not found.",
+        }
+    },)
+async def get_players_by_team(
+    team_abb: Annotated[
+        str,
+        Path(
+            min_length=3,
+            max_length=3,
+            title="Abbreviation from the team which will have players retrived",
+        ),
+    ],
+    db: DbDependency,
+) -> ResponseDict[list[Player]] | ErrorResponseDict:
+    np = db["players"]
+    normalized_abb = team_abb.upper()
+    cursor = np.find({"team.abbreviation": normalized_abb}).sort("full_name",  1)
+    players = await cursor.to_list()
+    if players and len(players) > 0:
+        return {
+            "message": f"Players from {normalized_abb} successfully retrieved.",
+            "data": players,
+        }
+    raise HTTPException(
+        status_code=404,
+        detail={"message": f"Players from {normalized_abb} not found."},
+    )
