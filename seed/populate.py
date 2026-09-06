@@ -435,6 +435,7 @@ def populate_nba_players():
         }
         collection.update_one({"_id": player_id}, {"$set": document}, upsert=True)
 
+
 def extract_player_season(
     player_id: int, season_year: str, is_playoffs: bool = False
 ) -> dict | None:

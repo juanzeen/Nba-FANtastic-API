@@ -14,12 +14,16 @@ import math
 router = APIRouter(prefix="/players", tags=["Current NBA Players"])
 
 
-@router.get("/", status_code=200, responses={
-    404:{
-        "model": ErrorResponseDict,
-        "description": "Actual NBA players not found."
-     }
-})
+@router.get(
+    "/",
+    status_code=200,
+    responses={
+        404: {
+            "model": ErrorResponseDict,
+            "description": "Actual NBA players not found.",
+        }
+    },
+)
 async def get_nba_players(
     pagination: Annotated[PaginationParams, Query()], db: DbDependency
 ) -> PaginationResponse[Player] | ErrorResponseDict:
@@ -48,12 +52,16 @@ async def get_nba_players(
     )
 
 
-@router.get("/{id}", status_code=200, responses={
-    404:{
-        "model": ErrorResponseDict,
-        "description": "Actual NBA player with id xx not found."
-     }
-})
+@router.get(
+    "/{id}",
+    status_code=200,
+    responses={
+        404: {
+            "model": ErrorResponseDict,
+            "description": "Actual NBA player with id xx not found.",
+        }
+    },
+)
 async def get_nba_player_by_id(
     id: Annotated[
         int, Path(gt=10, lt=10000000, title="ID from the player who will be fetched")
@@ -69,12 +77,16 @@ async def get_nba_player_by_id(
     )
 
 
-@router.get("/search/{slug}", status_code=200, responses={
-    404:{
-        "model": ErrorResponseDict,
-        "description": "Actual NBA player with slug xxx-xxxx not found."
-     }
-})
+@router.get(
+    "/search/{slug}",
+    status_code=200,
+    responses={
+        404: {
+            "model": ErrorResponseDict,
+            "description": "Actual NBA player with slug xxx-xxxx not found.",
+        }
+    },
+)
 async def get_nba_player_by_slug(
     slug: Annotated[
         str,
@@ -96,12 +108,16 @@ async def get_nba_player_by_slug(
 
 
 # Seasons
-@router.get("/{player_id}/seasons", status_code=200, responses={
-    404:{
-        "model": ErrorResponseDict,
-        "description": "Seasons from player with id xx not found."
-     }
-})
+@router.get(
+    "/{player_id}/seasons",
+    status_code=200,
+    responses={
+        404: {
+            "model": ErrorResponseDict,
+            "description": "Seasons from player with id xx not found.",
+        }
+    },
+)
 async def get_nba_player_seasons(
     player_id: Annotated[
         int, Path(gt=10, lt=10000000, title="ID from the player who will be fetched.")
@@ -137,12 +153,16 @@ async def get_nba_player_seasons(
     )
 
 
-@router.get("/{player_id}/seasons/{season_year}", status_code=200, responses={
-    404:{
-        "model": ErrorResponseDict,
-        "description": "Season xxxx-xx from player with id xx not found."
-     }
-})
+@router.get(
+    "/{player_id}/seasons/{season_year}",
+    status_code=200,
+    responses={
+        404: {
+            "model": ErrorResponseDict,
+            "description": "Season xxxx-xx from player with id xx not found.",
+        }
+    },
+)
 async def get_nba_player_season_by_year(
     player_id: Annotated[
         int, Path(gt=10, lt=10000000, title="ID from the player who will be fetched.")
@@ -160,8 +180,13 @@ async def get_nba_player_season_by_year(
     ps = db["players_seasons"]
     season = await ps.find_one({"player_id": player_id, "season_year": season_year})
     if season:
-        return {"message": f"Season {season_year} from player with id {player_id} successfully retrieved.", "data": season}
+        return {
+            "message": f"Season {season_year} from player with id {player_id} successfully retrieved.",
+            "data": season,
+        }
     raise HTTPException(
         status_code=404,
-        detail={"message": f"Season {season_year} from player with id {player_id} not found."},
+        detail={
+            "message": f"Season {season_year} from player with id {player_id} not found."
+        },
     )

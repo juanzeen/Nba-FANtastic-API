@@ -19,4 +19,5 @@ def get_client() -> AsyncMongoClient:
 def get_db() -> AsyncDatabase:
     return client[db_name]
 
+
 DbDependency = Annotated[AsyncDatabase, Depends(get_db, use_cache=True)]

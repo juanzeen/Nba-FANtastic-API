@@ -7,12 +7,16 @@ from ..schemas.base import ResponseDict, ErrorResponseDict
 router = APIRouter(prefix="/historical-records", tags=["Historical Records"])
 
 
-@router.get("/", status_code=200, responses={
-    404:{
-        "model": ErrorResponseDict,
-        "description": "Historical records not found."
-     }
-})
+@router.get(
+    "/",
+    status_code=200,
+    responses={
+        404: {
+            "model": ErrorResponseDict,
+            "description": "Historical records not found.",
+        }
+    },
+)
 async def get_historical_records(
     db: DbDependency,
 ) -> ResponseDict[list[HistoricalRecord]] | ErrorResponseDict:
@@ -28,12 +32,16 @@ async def get_historical_records(
     )
 
 
-@router.get("/{category}", status_code=200, responses={
-    404:{
-        "model": ErrorResponseDict,
-        "description": "Historical record with category xxxx not found."
-     }
-})
+@router.get(
+    "/{category}",
+    status_code=200,
+    responses={
+        404: {
+            "model": ErrorResponseDict,
+            "description": "Historical record with category xxxx not found.",
+        }
+    },
+)
 async def get_historical_record_by_category(
     category: Annotated[
         str,

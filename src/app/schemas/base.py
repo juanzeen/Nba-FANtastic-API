@@ -3,8 +3,10 @@ from pydantic import BaseModel, Field
 
 T = TypeVar("T")
 
+
 class ErrorMessage(BaseModel):
     message: str
+
 
 class ResponseDict(TypedDict, Generic[T]):
     data: T

@@ -13,12 +13,16 @@ import math
 router = APIRouter(prefix="/historical-players", tags=["Historical Players"])
 
 
-@router.get("/", status_code=200, responses={
-    404:{
-        "model": ErrorResponseDict,
-        "description": "Historical players not found."
-     }
-})
+@router.get(
+    "/",
+    status_code=200,
+    responses={
+        404: {
+            "model": ErrorResponseDict,
+            "description": "Historical players not found.",
+        }
+    },
+)
 async def get_historical_players(
     pagination: Annotated[PaginationParams, Query()], db: DbDependency
 ) -> PaginationResponse[HistoricalPlayer] | ErrorResponseDict:
@@ -48,12 +52,16 @@ async def get_historical_players(
     }
 
 
-@router.get("/{id}", status_code=200, responses={
-    404:{
-        "model": ErrorResponseDict,
-        "description": "Historical player with id xx not found."
-     }
-})
+@router.get(
+    "/{id}",
+    status_code=200,
+    responses={
+        404: {
+            "model": ErrorResponseDict,
+            "description": "Historical player with id xx not found.",
+        }
+    },
+)
 async def get_historical_player_by_id(
     id: Annotated[
         int, Path(ge=10, lt=1000000, title="_id from the player who will be fetched")
@@ -73,12 +81,16 @@ async def get_historical_player_by_id(
     )
 
 
-@router.get("/search/{slug}", status_code=200, responses={
-    404:{
-        "model": ErrorResponseDict,
-        "description": "Historical player with slug xxxx-xxxx not found."
-     }
-})
+@router.get(
+    "/search/{slug}",
+    status_code=200,
+    responses={
+        404: {
+            "model": ErrorResponseDict,
+            "description": "Historical player with slug xxxx-xxxx not found.",
+        }
+    },
+)
 async def get_historical_player_by_slug(
     slug: Annotated[
         str,
