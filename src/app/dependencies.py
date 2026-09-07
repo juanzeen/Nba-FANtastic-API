@@ -9,7 +9,7 @@ dotenv.load_dotenv()
 
 db_url = os.getenv("MONGO_URL")
 db_name = os.getenv("DATABASE_NAME", "nba_fantastic")
-client = AsyncMongoClient(db_url)
+client = AsyncMongoClient(db_url, serverSelectionTimeoutMS=10000)
 
 
 def get_client() -> AsyncMongoClient:
