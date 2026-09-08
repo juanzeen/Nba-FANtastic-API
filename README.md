@@ -11,7 +11,7 @@ The goal of this project is to provide a complete "catalog" and statistical pred
 ### Core Features (Roadmap & Current)
 
 - 📜 **Historical Player & Records Catalog**: Search and browse profiles for all-time NBA legends as well historical records. ✔️
-- ⛹‍♂ **Current & Historical NBA Players Catalog**: Search and browse seasons and stats for current NBA players. 🔄
+- ⛹‍♂ **Current & Historical NBA Players Catalog**: Search and browse seasons and stats for current NBA players. ✔️
 - 📊 **Comprehensive Statistics**: Access key stats, career averages, game logs, and advanced efficiency metrics.
 - 🔮 **Game Stats Prediction**: Future performance projections and statistical modeling for upcoming games.
 - ⚡ **High-Performance REST API**: Fast and clean API endpoints designed to power frontend clients and mobile apps.
