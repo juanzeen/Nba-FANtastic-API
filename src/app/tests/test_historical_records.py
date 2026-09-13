@@ -105,7 +105,7 @@ async def test_get_historical_record_by_category(mock_redis):
 
 
 @pytest.mark.anyio
-async def test_fail_get_historical_record_by_category_inexistent_category():
+async def test_fail_get_historical_record_by_category_inexistent_category(mock_redis):
     mock_db = MagicMock()
     mock_collection = MagicMock()
     mock_collection.find_one = AsyncMock(return_value=None)
