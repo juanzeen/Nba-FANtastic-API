@@ -6,7 +6,7 @@ from ..dependencies import get_db
 
 
 @pytest.mark.anyio
-async def test_get_historical_records():
+async def test_get_historical_records(mock_redis):
     mock_db = MagicMock()
     mock_collection = MagicMock()
     mock_collection.find.return_value.to_list = AsyncMock(
@@ -43,10 +43,10 @@ async def test_get_historical_records():
 
 
 @pytest.mark.anyio
-async def test_fail_get_historical_records():
+async def test_fail_get_historical_records(mock_redis):
     mock_db = MagicMock()
     mock_collection = MagicMock()
-    mock_collection.find.return_value = AsyncMock(return_value=None)
+    mock_collection.find.return_value.to_list = AsyncMock(return_value=None)
     mock_db.__getitem__.return_value = mock_collection
     app.dependency_overrides[get_db] = lambda: mock_db
     async with AsyncClient(
@@ -60,10 +60,10 @@ async def test_fail_get_historical_records():
 
 
 @pytest.mark.anyio
-async def test_fail_get_historical_records_empty_array():
+async def test_fail_get_historical_records_empty_array(mock_redis):
     mock_db = MagicMock()
     mock_collection = MagicMock()
-    mock_collection.find.return_value = AsyncMock(return_value=[])
+    mock_collection.find.return_value.to_list = AsyncMock(return_value=[])
     mock_db.__getitem__.return_value = mock_collection
     app.dependency_overrides[get_db] = lambda: mock_db
     async with AsyncClient(
@@ -77,7 +77,7 @@ async def test_fail_get_historical_records_empty_array():
 
 
 @pytest.mark.anyio
-async def test_get_historical_record_by_category():
+async def test_get_historical_record_by_category(mock_redis):
     mock_db = MagicMock()
     mock_collection = MagicMock()
     mock_collection.find_one = AsyncMock(
@@ -105,7 +105,7 @@ async def test_get_historical_record_by_category():
 
 
 @pytest.mark.anyio
-async def test_fail_get_historical_record_by_category_inexistent_category():
+async def test_fail_get_historical_record_by_category_inexistent_category(mock_redis):
     mock_db = MagicMock()
     mock_collection = MagicMock()
     mock_collection.find_one = AsyncMock(return_value=None)

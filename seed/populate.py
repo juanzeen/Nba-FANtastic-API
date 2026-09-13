@@ -629,7 +629,7 @@ def career_span_to_seasons_list(span: str) -> list[str]:
 
 def populate_player_seasons():
     df = pd.read_csv("nba_players.csv")
-    pids = df["ID"].tolist()[23:]
+    pids = df["ID"].tolist()
     for pid in pids:
         player_matches = df[df["ID"].astype(str) == str(pid)]
         if player_matches.empty:

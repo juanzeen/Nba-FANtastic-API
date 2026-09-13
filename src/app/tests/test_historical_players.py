@@ -435,7 +435,7 @@ async def test_fail_get_historical_players_page_limit_too_high():
 
 
 @pytest.mark.anyio
-async def test_get_historical_player_by_id():
+async def test_get_historical_player_by_id(mock_redis):
     mock_db = MagicMock()
     mock_cursor = MagicMock()
     mock_cursor.find_one = AsyncMock(return_value=mocked_historical_player)
@@ -455,7 +455,7 @@ async def test_get_historical_player_by_id():
 
 
 @pytest.mark.anyio
-async def test_fail_get_historical_player_by_id():
+async def test_fail_get_historical_player_by_id(mock_redis):
     mock_db = MagicMock()
     mock_cursor = MagicMock()
     mock_cursor.find_one = AsyncMock(return_value=None)
@@ -506,7 +506,7 @@ async def test_fail_get_historical_player_by_id_big_id():
 
 
 @pytest.mark.anyio
-async def test_get_historical_player_by_slug():
+async def test_get_historical_player_by_slug(mock_redis):
     mock_db = MagicMock()
     mock_cursor = MagicMock()
     mock_cursor.find_one = AsyncMock(return_value=mocked_historical_player)
@@ -526,7 +526,7 @@ async def test_get_historical_player_by_slug():
 
 
 @pytest.mark.anyio
-async def test_fail_get_historical_player_by_slug():
+async def test_fail_get_historical_player_by_slug(mock_redis):
     mock_db = MagicMock()
     mock_cursor = MagicMock()
     mock_cursor.find_one = AsyncMock(return_value=None)

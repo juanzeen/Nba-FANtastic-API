@@ -13,6 +13,28 @@ services:
       - configdb:/data/configdb
       - mongot:/data/mongot
       - ./init:/docker-entrypoint-initdb.d
+  redis:
+    image: redis:latest
+    container_name: nba_fantastic_redis
+    ports:
+      - '${REDIS_PORT:-6379}:6379'
+    environment:
+      - REDIS_ARGS=--requirepass ${REDIS_PASSWORD:-my_secure_password} --appendonly yes
+    restart: unless-stopped
+  api:
+    build:
+      context: .
+      target: development
+    container_name: nba_api_dev
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - /app/.venv
+    environment:
+      - MONGO_URL=${MONGO_URL:-mongodb://user:password@localhost:27017/nba_fantastic?authSource=admin&directConnection=true}
+    depends_on:
+      - mongodb
 volumes:
   db:
   configdb:

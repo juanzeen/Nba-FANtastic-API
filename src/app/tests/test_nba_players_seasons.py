@@ -734,7 +734,7 @@ async def test_fail_get_player_seasons_invalid_player_id_type():
 
 
 @pytest.mark.anyio
-async def test_get_player_season_by_year():
+async def test_get_player_season_by_year(mock_redis):
     mock_db = MagicMock()
     mock_collection = MagicMock()
     mock_collection.find_one = AsyncMock(return_value=mock_s2)
@@ -759,7 +759,7 @@ async def test_get_player_season_by_year():
 
 
 @pytest.mark.anyio
-async def test_fail_get_player_season_not_found():
+async def test_fail_get_player_season_not_found(mock_redis):
     mock_db = MagicMock()
     mock_collection = MagicMock()
     mock_collection.find_one = AsyncMock(return_value=None)
