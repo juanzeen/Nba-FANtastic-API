@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Path, HTTPException, Query
 from typing import Annotated
-from ..dependencies import DbDependency, get_cached_or_db
+from ..dependencies import DbDependency, RedisDependency
+from ..utils.cache import get_cached_or_db
 from ..schemas.nba_players import Player
 from ..schemas.player_seasons import PlayerSeason
 from ..schemas.base import (
@@ -175,10 +176,10 @@ async def get_nba_player_season_by_year(
         ),
     ],
     db: DbDependency,
+    redis: RedisDependency
 ) -> ResponseDict[PlayerSeason] | ErrorResponseDict:
     ps = db["players_seasons"]
-    #Avaliar com muita cautela caso a temporada desejada seja a atual, visando não retornar dados inconsistentes cacheados.
-    season = await get_cached_or_db(f"players:{player_id}:seasons:{season_year}", ps.find_one({"player_id": player_id, "season_year": season_year}))
+    season = await get_cached_or_db(redis=redis, cache_key=f"players:{player_id}:seasons:{season_year}", fetch_from_db=ps.find_one({"player_id": player_id, "season_year": season_year}))
     if season:
         return {
             "message": f"Season {season_year} from player with id {player_id} successfully retrieved.",
@@ -208,11 +209,12 @@ async def get_players_by_team(
         ),
     ],
     db: DbDependency,
+    redis: RedisDependency
 ) -> ResponseDict[list[Player]] | ErrorResponseDict:
     np = db["players"]
     normalized_abb = team_abb.upper()
     cursor = np.find({"team.abbreviation": normalized_abb}).sort("full_name",  1)
-    players = await get_cached_or_db(f"players:team:{normalized_abb}", cursor.to_list())
+    players = await get_cached_or_db(redis=redis, cache_key=f"players:team:{normalized_abb}", fetch_from_db=cursor.to_list())
     if players and len(players) > 0:
         return {
             "message": f"Players from {normalized_abb} successfully retrieved.",
