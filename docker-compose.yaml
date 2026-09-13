@@ -30,8 +30,9 @@ services:
       - "8000:8000"
     volumes:
       - .:/app
+      - /app/.venv
     environment:
-      - MONGO_URL=mongodb://nba_fantastic:superpasswordfornbafantastic@mongodb:27017/?authSource=admin
+      - MONGO_URL=${MONGO_URL:-mongodb://user:password@localhost:27017/nba_fantastic?authSource=admin&directConnection=true}
     depends_on:
       - mongodb
 volumes:
