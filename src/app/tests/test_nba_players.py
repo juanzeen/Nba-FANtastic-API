@@ -345,7 +345,7 @@ async def test_fail_get_nba_players_page_too_low():
 
 
 @pytest.mark.anyio
-async def test_get_player():
+async def test_get_player(mock_redis):
     mock_db = MagicMock()
     mock_collection = MagicMock()
     mock_collection.find_one = AsyncMock(return_value=mock_p1)
@@ -367,7 +367,7 @@ async def test_get_player():
 
 
 @pytest.mark.anyio
-async def test_fail_get_player():
+async def test_fail_get_player(mock_redis):
     mock_db = MagicMock()
     mock_collection = MagicMock()
     mock_collection.find_one = AsyncMock(return_value=None)
@@ -446,7 +446,7 @@ async def test_fail_get_player_invalid_id_too_large():
 
 
 @pytest.mark.anyio
-async def test_get_historical_player_by_slug():
+async def test_get_nba_player_by_slug(mock_redis):
     mock_db = MagicMock()
     mock_cursor = MagicMock()
     mock_cursor.find_one = AsyncMock(return_value=mock_p1)
@@ -466,7 +466,7 @@ async def test_get_historical_player_by_slug():
 
 
 @pytest.mark.anyio
-async def test_fail_get_historical_player_by_slug():
+async def test_fail_get_nba_player_by_slug(mock_redis):
     mock_db = MagicMock()
     mock_cursor = MagicMock()
     mock_cursor.find_one = AsyncMock(return_value=None)
@@ -483,7 +483,7 @@ async def test_fail_get_historical_player_by_slug():
 
 
 @pytest.mark.anyio
-async def test_fail_get_historical_player_by_slug_too_short():
+async def test_fail_get_nba_player_by_slug_too_short():
     mock_db = MagicMock()
     mock_cursor = MagicMock()
     mock_cursor.find_one = AsyncMock(return_value=None)
