@@ -13,12 +13,14 @@ db_name = os.getenv("DATABASE_NAME", "nba_fantastic")
 client = AsyncMongoClient(db_url, serverSelectionTimeoutMS=10000)
 redis_client = aioredis.from_url(os.getenv("REDIS_URL"), decode_responses=True)
 
+
 def get_client() -> AsyncMongoClient:
     return client
 
 
 def get_db() -> AsyncDatabase:
     return client[db_name]
+
 
 def get_redis() -> aioredis.Redis:
     return redis_client

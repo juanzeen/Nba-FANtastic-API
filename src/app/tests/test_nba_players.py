@@ -221,7 +221,7 @@ async def test_fail_get_players():
     mock_cursor.sort.return_value = mock_cursor
     mock_cursor.skip.return_value = mock_cursor
     mock_cursor.limit.return_value = mock_cursor
-    mock_cursor.to_list = AsyncMock(None)
+    mock_cursor.to_list = AsyncMock(return_value=None)
     mock_collection.find.return_value = mock_cursor
     mock_db.__getitem__.return_value = mock_collection
     app.dependency_overrides[get_db] = lambda: mock_db
@@ -498,77 +498,81 @@ async def test_fail_get_historical_player_by_slug_too_short():
     assert response.status_code == 422
     assert message == "String should have at least 7 characters"
 
-@pytest.mark.anyio
-async def test_get_players_by_team_abbreviation():
-        mock_db = MagicMock()
-        mock_cursor = MagicMock()
-        mock_cursor.find.return_value = mock_cursor
-        mock_cursor.sort.return_value = mock_cursor
-        mock_cursor.find.return_value.to_list = AsyncMock(return_value=[mock_p1, mock_p2])
-        mock_db.__getitem__.return_value = mock_cursor
-        app.dependency_overrides[get_db] = lambda: mock_db
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as ac:
-            response = await ac.get("/players/team/mia")
-            print(response)
-            data = response.json().get("data")
-            message = response.json().get("message", "")
-        app.dependency_overrides.clear()
-        assert response.status_code == 200
-        assert len(data) > 0
-        assert data[0].get("full_name") == "Precious Achiuwa"
-        assert message == "Players from MIA successfully retrieved."
 
 @pytest.mark.anyio
-async def test_fail_get_players_by_team_abbreviation_not_found():
-        mock_db = MagicMock()
-        mock_cursor = MagicMock()
-        mock_cursor.find.return_value = mock_cursor
-        mock_cursor.sort.return_value = mock_cursor
-        mock_cursor.find.return_value.to_list = AsyncMock(None)
-        mock_db.__getitem__.return_value = mock_cursor
-        app.dependency_overrides[get_db] = lambda: mock_db
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as ac:
-            response = await ac.get("/players/team/mis")
-            print(response)
-            message = response.json().get("detail").get("message", "")
-        app.dependency_overrides.clear()
-        assert response.status_code == 404
-        assert message == "Players from MIS not found."
+async def test_get_players_by_team_abbreviation(mock_redis):
+    mock_db = MagicMock()
+    mock_cursor = MagicMock()
+    mock_cursor.find.return_value = mock_cursor
+    mock_cursor.sort.return_value = mock_cursor
+    mock_cursor.find.return_value.to_list = AsyncMock(return_value=[mock_p1, mock_p2])
+    mock_db.__getitem__.return_value = mock_cursor
+    app.dependency_overrides[get_db] = lambda: mock_db
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as ac:
+        response = await ac.get("/players/team/mia")
+        print(response)
+        data = response.json().get("data")
+        message = response.json().get("message", "")
+    app.dependency_overrides.clear()
+    assert response.status_code == 200
+    assert len(data) > 0
+    assert data[0].get("full_name") == "Precious Achiuwa"
+    assert message == "Players from MIA successfully retrieved."
+
+
+@pytest.mark.anyio
+async def test_fail_get_players_by_team_abbreviation_not_found(mock_redis):
+    mock_db = MagicMock()
+    mock_cursor = MagicMock()
+    mock_cursor.find.return_value = mock_cursor
+    mock_cursor.sort.return_value = mock_cursor
+    mock_cursor.to_list = AsyncMock(return_value=None)
+    mock_db.__getitem__.return_value = mock_cursor
+    app.dependency_overrides[get_db] = lambda: mock_db
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as ac:
+        response = await ac.get("/players/team/mis")
+        print(response)
+        message = response.json().get("detail").get("message", "")
+    app.dependency_overrides.clear()
+    assert response.status_code == 404
+    assert message == "Players from MIS not found."
+
 
 @pytest.mark.anyio
 async def test_fail_get_players_by_team_abbreviation_too_short():
-        mock_db = MagicMock()
-        mock_cursor = MagicMock()
-        mock_cursor.find.return_value.to_list = AsyncMock(None)
-        mock_db.__getitem__.return_value = mock_cursor
-        app.dependency_overrides[get_db] = lambda: mock_db
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as ac:
-            response = await ac.get("/players/team/mi")
-            print(response)
-            message = response.json().get("detail")[0].get("msg", "")
-        app.dependency_overrides.clear()
-        assert response.status_code == 422
-        assert message == "String should have at least 3 characters"
+    mock_db = MagicMock()
+    mock_cursor = MagicMock()
+    mock_cursor.find.return_value.to_list = AsyncMock(return_value=None)
+    mock_db.__getitem__.return_value = mock_cursor
+    app.dependency_overrides[get_db] = lambda: mock_db
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as ac:
+        response = await ac.get("/players/team/mi")
+        print(response)
+        message = response.json().get("detail")[0].get("msg", "")
+    app.dependency_overrides.clear()
+    assert response.status_code == 422
+    assert message == "String should have at least 3 characters"
+
 
 @pytest.mark.anyio
 async def test_fail_get_players_by_team_abbreviation_too_long():
-        mock_db = MagicMock()
-        mock_cursor = MagicMock()
-        mock_cursor.find.return_value.to_list = AsyncMock(None)
-        mock_db.__getitem__.return_value = mock_cursor
-        app.dependency_overrides[get_db] = lambda: mock_db
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as ac:
-            response = await ac.get("/players/team/miami")
-            print(response)
-            message = response.json().get("detail")[0].get("msg", "")
-        app.dependency_overrides.clear()
-        assert response.status_code == 422
-        assert message == "String should have at most 3 characters"
+    mock_db = MagicMock()
+    mock_cursor = MagicMock()
+    mock_cursor.find.return_value.to_list = AsyncMock(return_value=None)
+    mock_db.__getitem__.return_value = mock_cursor
+    app.dependency_overrides[get_db] = lambda: mock_db
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as ac:
+        response = await ac.get("/players/team/miami")
+        print(response)
+        message = response.json().get("detail")[0].get("msg", "")
+    app.dependency_overrides.clear()
+    assert response.status_code == 422
+    assert message == "String should have at most 3 characters"

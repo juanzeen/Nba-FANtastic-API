@@ -107,6 +107,7 @@ async def get_nba_player_by_slug(
         status_code=404, detail={"message": f"Player with slug {slug} not found."}
     )
 
+
 # Seasons
 @router.get(
     "/{player_id}/seasons",
@@ -176,10 +177,14 @@ async def get_nba_player_season_by_year(
         ),
     ],
     db: DbDependency,
-    redis: RedisDependency
+    redis: RedisDependency,
 ) -> ResponseDict[PlayerSeason] | ErrorResponseDict:
     ps = db["players_seasons"]
-    season = await get_cached_or_db(redis=redis, cache_key=f"players:{player_id}:seasons:{season_year}", fetch_from_db=ps.find_one({"player_id": player_id, "season_year": season_year}))
+    season = await get_cached_or_db(
+        redis=redis,
+        cache_key=f"players:{player_id}:seasons:{season_year}",
+        fetch_from_db=ps.find_one({"player_id": player_id, "season_year": season_year}),
+    )
     if season:
         return {
             "message": f"Season {season_year} from player with id {player_id} successfully retrieved.",
@@ -193,12 +198,16 @@ async def get_nba_player_season_by_year(
     )
 
 
-@router.get("/team/{team_abb}", status_code=200,   responses={
+@router.get(
+    "/team/{team_abb}",
+    status_code=200,
+    responses={
         404: {
             "model": ErrorResponseDict,
             "description": "Players from team XXX not found.",
         }
-    },)
+    },
+)
 async def get_players_by_team(
     team_abb: Annotated[
         str,
@@ -209,12 +218,16 @@ async def get_players_by_team(
         ),
     ],
     db: DbDependency,
-    redis: RedisDependency
+    redis: RedisDependency,
 ) -> ResponseDict[list[Player]] | ErrorResponseDict:
     np = db["players"]
     normalized_abb = team_abb.upper()
-    cursor = np.find({"team.abbreviation": normalized_abb}).sort("full_name",  1)
-    players = await get_cached_or_db(redis=redis, cache_key=f"players:team:{normalized_abb}", fetch_from_db=cursor.to_list())
+    cursor = np.find({"team.abbreviation": normalized_abb}).sort("full_name", 1)
+    players = await get_cached_or_db(
+        redis=redis,
+        cache_key=f"players:team:{normalized_abb}",
+        fetch_from_db=cursor.to_list(),
+    )
     if players and len(players) > 0:
         return {
             "message": f"Players from {normalized_abb} successfully retrieved.",
