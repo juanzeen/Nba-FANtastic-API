@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Query, Path, HTTPException
 from typing import Annotated
-from ..dependencies import DbDependency
+from ..dependencies import DbDependency, RedisDependency
+from ..utils.cache import get_cached_or_db
 from ..schemas.historical_players import HistoricalPlayer
 from ..schemas.base import (
     ResponseDict,
@@ -67,9 +68,16 @@ async def get_historical_player_by_id(
         int, Path(ge=10, lt=1000000, title="_id from the player who will be fetched")
     ],
     db: DbDependency,
+    redis: RedisDependency,
 ) -> ResponseDict[HistoricalPlayer] | ErrorResponseDict:
     hp = db["historical_players"]
-    player = await hp.find_one({"_id": id})
+    cache_key = f"historical_players:id:{id}"
+    player = await get_cached_or_db(
+        redis=redis,
+        cache_key=cache_key,
+        fetch_from_db=hp.find_one({"_id": id}),
+        expire_seconds=86400,
+    )
     if player:
         return {
             "data": player,
@@ -101,9 +109,16 @@ async def get_historical_player_by_slug(
         ),
     ],
     db: DbDependency,
+    redis: RedisDependency,
 ):
     hp = db["historical_players"]
-    player = await hp.find_one({"slug": slug})
+    cache_key = f"historical_players:slug:{slug}"
+    player = await get_cached_or_db(
+        redis=redis,
+        cache_key=cache_key,
+        fetch_from_db=hp.find_one({"slug": slug}),
+        expire_seconds=86400,
+    )
     if player:
         return {
             "data": player,

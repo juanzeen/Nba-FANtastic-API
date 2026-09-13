@@ -13,6 +13,7 @@ from ..schemas.base import (
 import math
 
 router = APIRouter(prefix="/players", tags=["Current NBA Players"])
+CURRENT_SEASON = "2026-27"
 
 
 @router.get(
@@ -68,9 +69,15 @@ async def get_nba_player_by_id(
         int, Path(gt=10, lt=10000000, title="ID from the player who will be fetched")
     ],
     db: DbDependency,
+    redis: RedisDependency,
 ) -> ResponseDict[Player] | ErrorResponseDict:
     np = db["players"]
-    player = await np.find_one({"_id": id})
+    cache_key = f"players:id:{id}"
+    player = await get_cached_or_db(
+        redis=redis,
+        cache_key=cache_key,
+        fetch_from_db=np.find_one({"_id": id}),
+    )
     if player:
         return {"message": "Player successfully retrieved.", "data": player}
     raise HTTPException(
@@ -98,9 +105,15 @@ async def get_nba_player_by_slug(
         ),
     ],
     db: DbDependency,
+    redis: RedisDependency,
 ) -> ResponseDict[Player] | ErrorResponseDict:
     np = db["players"]
-    player = await np.find_one({"slug": slug})
+    cache_key = f"players:slug:{slug}"
+    player = await get_cached_or_db(
+        redis=redis,
+        cache_key=cache_key,
+        fetch_from_db=np.find_one({"slug": slug}),
+    )
     if player:
         return {"message": "Player successfully retrieved.", "data": player}
     raise HTTPException(
@@ -180,10 +193,13 @@ async def get_nba_player_season_by_year(
     redis: RedisDependency,
 ) -> ResponseDict[PlayerSeason] | ErrorResponseDict:
     ps = db["players_seasons"]
+    ttl = 900 if season_year == CURRENT_SEASON else 86400
+    cache_key = f"players:{player_id}:seasons:{season_year}"
     season = await get_cached_or_db(
         redis=redis,
-        cache_key=f"players:{player_id}:seasons:{season_year}",
+        cache_key=cache_key,
         fetch_from_db=ps.find_one({"player_id": player_id, "season_year": season_year}),
+        expire_seconds=ttl,
     )
     if season:
         return {
@@ -222,11 +238,13 @@ async def get_players_by_team(
 ) -> ResponseDict[list[Player]] | ErrorResponseDict:
     np = db["players"]
     normalized_abb = team_abb.upper()
+    cache_key = f"players:team:{normalized_abb}"
     cursor = np.find({"team.abbreviation": normalized_abb}).sort("full_name", 1)
     players = await get_cached_or_db(
         redis=redis,
-        cache_key=f"players:team:{normalized_abb}",
+        cache_key=cache_key,
         fetch_from_db=cursor.to_list(),
+        expire_seconds=7200,
     )
     if players and len(players) > 0:
         return {

@@ -26,6 +26,7 @@ async def get_historical_records(
         redis=redis,
         cache_key="historical_records",
         fetch_from_db=hr.find({}, {"_id": 0}).to_list(),
+        expire_seconds=86400,
     )
     if records and len(records) > 0:
         return {
@@ -61,10 +62,12 @@ async def get_historical_record_by_category(
 ) -> ResponseDict[HistoricalRecord] | ErrorResponseDict:
     hr = db["historical_records"]
     db_function = hr.find_one({"record": category}, {"_id": 0})
+    cache_key = f"historical_records:{category}"
     record = await get_cached_or_db(
         redis=redis,
-        cache_key=f"historical_records:{category}",
+        cache_key=cache_key,
         fetch_from_db=db_function,
+        expire_seconds=86400,
     )
     if record:
         return {

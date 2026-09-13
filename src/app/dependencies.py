@@ -11,7 +11,9 @@ dotenv.load_dotenv()
 db_url = os.getenv("MONGO_URL")
 db_name = os.getenv("DATABASE_NAME", "nba_fantastic")
 client = AsyncMongoClient(db_url, serverSelectionTimeoutMS=10000)
-redis_client = aioredis.from_url(os.getenv("REDIS_URL"), decode_responses=True)
+redis_client = aioredis.from_url(
+    os.getenv("REDIS_URL", "redis://nba_fantastic_redis:6379"), decode_responses=True
+)
 
 
 def get_client() -> AsyncMongoClient:
