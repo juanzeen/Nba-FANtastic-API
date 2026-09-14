@@ -10,7 +10,8 @@ The goal of this project is to provide a complete "catalog" and statistical pred
 
 ### Core Features (Roadmap & Current)
 
-- 📜 **Historical & Active Player Catalog**: Search and browse profiles for all-time NBA legends as well as current league players.
+- 📜 **Historical Player & Records Catalog**: Search and browse profiles for all-time NBA legends as well historical records. ✔️
+- ⛹‍♂ **Current & Historical NBA Players Catalog**: Search and browse seasons and stats for current NBA players. ✔️
 - 📊 **Comprehensive Statistics**: Access key stats, career averages, game logs, and advanced efficiency metrics.
 - 🔮 **Game Stats Prediction**: Future performance projections and statistical modeling for upcoming games.
 - ⚡ **High-Performance REST API**: Fast and clean API endpoints designed to power frontend clients and mobile apps.
@@ -35,9 +36,9 @@ The goal of this project is to provide a complete "catalog" and statistical pred
 
 - Python 3.14+ (or managed via `uv`)
 - [uv](https://docs.astral.sh/uv/)
-- Docker & Docker Compose (for containerized setup & MongoDB)
+- Docker & Docker Compose (for running MongoDB locally)
 
-### Installation
+### 1. Installation & Setup
 
 1. **Clone the repository**:
    ```bash
@@ -51,11 +52,72 @@ The goal of this project is to provide a complete "catalog" and statistical pred
    ```
 
 3. **Configure environment variables**:
-   Create a `.env` file in the root directory based on your database configuration:
-   ```env
-   MONGO_URI=mongodb://localhost:27017
-   DATABASE_NAME=nba_fantastic
+   Copy `.env.example` to create your local `.env` file:
+   ```bash
+   cp .env.example .env
    ```
+   The default `.env` is preconfigured to work seamlessly with the local Docker Compose MongoDB setup:
+   ```env
+   MONGO_URL=mongodb://user:password@localhost:27017/nba_fantastic?authSource=admin&directConnection=true
+   DATABASE_NAME=nba_fantastic
+   MONGO_DB_USER=user
+   MONGO_DB_PASSWORD=password
+   MONGO_DB_PORT=27017
+   ```
+
+---
+
+### 2. Running MongoDB Locally
+
+The project includes a `docker-compose.yaml` using `mongodb/mongodb-atlas-local`.
+
+- **Start MongoDB in the background**:
+  ```bash
+  docker compose up -d
+  ```
+
+- **Verify MongoDB is running**:
+  ```bash
+  docker compose ps
+  ```
+
+- **View MongoDB container logs**:
+  ```bash
+  docker compose logs -f mongodb
+  ```
+
+- **Stop MongoDB**:
+  ```bash
+  docker compose down
+  ```
+
+---
+
+### 3. Seeding the Database (Optional)
+
+To populate your local MongoDB instance with historical NBA player data and career statistics:
+
+```bash
+uv run python seed/populate.py
+```
+OR
+
+```
+cd seed
+python populate.py
+```
+---
+
+### 4. Running the API
+
+Start the FastAPI development server:
+
+```bash
+uv run fastapi dev src/app/main.py
+```
+
+- **Interactive API Docs (Swagger UI)**: [http://localhost:8000/docs](http://localhost:8000/docs)
+- **Health Check Endpoint**: [http://localhost:8000/](http://localhost:8000/) (verifies API and MongoDB database connectivity)
 
 ---
 
@@ -63,13 +125,19 @@ The goal of this project is to provide a complete "catalog" and statistical pred
 
 ```text
 Nba-FANtastic-API/
+├── docker-compose.yaml      # Docker Compose configuration for local MongoDB
+├── seed/                    # Data ingestion, seeding scripts, and datasets
+│   ├── extractor.py
+│   ├── nba_legends.csv
+│   └── populate.py
 ├── src/
-│   └── nba_fantastic_api/
-│       ├── seed/            # Data ingestion, seeding scripts, and CSV datasets
-│       └── ...              # API routes, models, and core logic (in progress)
+│   └── app/                 # FastAPI application
+│       ├── routers/         # API route handlers
+│       ├── dependencies.py  # MongoDB client & dependency injection
+│       └── main.py          # Application entrypoint & health checks
 ├── pyproject.toml           # Project metadata and dependencies
 ├── README.md                # Project documentation
-└── ...
+└── uv.lock                  # uv lockfile
 ```
 
 ---

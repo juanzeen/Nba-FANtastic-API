@@ -159,7 +159,6 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-*.csv
 
 # Spyder project settings
 .spyderproject
@@ -203,7 +202,7 @@ cython_debug/
 #   that can be found at https://github.com/github/gitignore/blob/main/Global/VisualStudioCode.gitignore
 #   and can be added to the global gitignore or merged into this file. However, if you prefer,
 #   you could uncomment the following to ignore the entire vscode folder
-# .vscode/
+.vscode/
 # Temporary file for partial code execution
 tempCodeRunnerFile.py
 
@@ -220,3 +219,12 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+#.dump from mongodb
+dump
+dump/
+dump/*
+#personal nba_api/csv tests
+notebook.py
+seed/notebook.py
+schemas.md
+seasons_dump/
