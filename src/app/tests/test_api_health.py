@@ -6,7 +6,7 @@ import pytest
 
 
 @pytest.mark.anyio
-async def test_health_check():
+async def test_health_check(mock_redis):
     mock_client = MagicMock()
     mock_client.admin.command = AsyncMock(return_value={"ok": 1})
     app.dependency_overrides[get_client] = lambda: mock_client
@@ -19,7 +19,7 @@ async def test_health_check():
     assert response.status_code == 200
     assert response.json() == {
         "status": "healthy",
-        "services": {"api": "healthy", "database": "healthy"},
+        "services": {"api": "healthy", "database": "healthy", "cache": "healthy"},
     }
 
 
