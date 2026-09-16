@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, Path, HTTPException, Query
 from typing import Annotated
 from ..dependencies import DbDependency, RedisDependency
 from ..utils.cache import get_cached_or_db
+from ..utils.rate_limiter import rate_limit
 from ..schemas.nba_players import Player
 from ..schemas.player_seasons import PlayerSeason
 from ..schemas.base import (
@@ -25,6 +26,7 @@ CURRENT_SEASON = "2026-27"
             "description": "Actual NBA players not found.",
         }
     },
+    dependencies=[rate_limit(40, 60)],
 )
 async def get_nba_players(
     pagination: Annotated[PaginationParams, Query()], db: DbDependency
@@ -63,6 +65,7 @@ async def get_nba_players(
             "description": "Actual NBA player with id xx not found.",
         }
     },
+    dependencies=[rate_limit(60, 60)],
 )
 async def get_nba_player_by_id(
     id: Annotated[
@@ -94,6 +97,7 @@ async def get_nba_player_by_id(
             "description": "Actual NBA player with slug xxx-xxxx not found.",
         }
     },
+    dependencies=[rate_limit(60, 60)],
 )
 async def get_nba_player_by_slug(
     slug: Annotated[
@@ -131,6 +135,7 @@ async def get_nba_player_by_slug(
             "description": "Seasons from player with id xx not found.",
         }
     },
+    dependencies=[rate_limit(20, 60)],
 )
 async def get_nba_player_seasons(
     player_id: Annotated[
@@ -176,6 +181,7 @@ async def get_nba_player_seasons(
             "description": "Season xxxx-xx from player with id xx not found.",
         }
     },
+    dependencies=[rate_limit(20, 60)],
 )
 async def get_nba_player_season_by_year(
     player_id: Annotated[

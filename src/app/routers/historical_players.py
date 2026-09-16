@@ -2,6 +2,7 @@ from fastapi import APIRouter, Query, Path, HTTPException
 from typing import Annotated
 from ..dependencies import DbDependency, RedisDependency
 from ..utils.cache import get_cached_or_db
+from ..utils.rate_limiter import rate_limit
 from ..schemas.historical_players import HistoricalPlayer
 from ..schemas.base import (
     ResponseDict,
@@ -23,6 +24,7 @@ router = APIRouter(prefix="/historical-players", tags=["Historical Players"])
             "description": "Historical players not found.",
         }
     },
+    dependencies=[rate_limit(40, 60)],
 )
 async def get_historical_players(
     pagination: Annotated[PaginationParams, Query()], db: DbDependency
@@ -62,6 +64,7 @@ async def get_historical_players(
             "description": "Historical player with id xx not found.",
         }
     },
+    dependencies=[rate_limit(60, 60)],
 )
 async def get_historical_player_by_id(
     id: Annotated[
@@ -98,6 +101,7 @@ async def get_historical_player_by_id(
             "description": "Historical player with slug xxxx-xxxx not found.",
         }
     },
+    dependencies=[rate_limit(60, 60)],
 )
 async def get_historical_player_by_slug(
     slug: Annotated[

@@ -32,7 +32,8 @@ services:
       - .:/app
       - /app/.venv
     environment:
-      - MONGO_URL=${MONGO_URL:-mongodb://user:password@localhost:27017/nba_fantastic?authSource=admin&directConnection=true}
+      - MONGO_URL=mongodb://${MONGO_DB_USER:-user}:${MONGO_DB_PASSWORD:-password}@mongodb:27017/?authSource=admin
+      - REDIS_URL=redis://redis:6379
     depends_on:
       - mongodb
 volumes:

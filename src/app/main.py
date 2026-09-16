@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException
-from .dependencies import get_client
+from .dependencies import get_client, RedisDependency
 from .routers import historical_players, historical_records, nba_players
 
 app = FastAPI()
@@ -44,18 +44,22 @@ app.include_router(nba_players.router)
         },
     },
 )
-async def health_check(client=Depends(get_client)):
+async def health_check(redis: RedisDependency, client=Depends(get_client)):
     health_status = {
         "status": "healthy",
-        "services": {"api": "healthy", "database": "unknown"},
+        "services": {"api": "healthy", "database": "unknown", "cache": "unknown"},
     }
 
     try:
-        ping = await client.admin.command("ping")
-        if ping:
+        mongo_ping = await client.admin.command("ping")
+        redis_ping = await redis.ping()
+        if mongo_ping:
             health_status["services"]["database"] = "healthy"
+        if redis_ping:
+            health_status["services"]["cache"] = "healthy"
     except Exception as e:
         health_status["services"]["database"] = "unhealthy"
+        health_status["services"]["cache"] = "unhealthy"
         health_status["services"]["error"] = str(e)
         health_status["status"] = "unhealthy"
         raise HTTPException(status_code=503, detail=health_status)
