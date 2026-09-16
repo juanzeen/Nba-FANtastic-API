@@ -15,20 +15,20 @@ Built with **FastAPI**, **MongoDB (PyMongo Async)**, and **Redis**, utilizing **
 
 ---
 
-## 📌 Features
+## Features
 
-- 📜 **Historical NBA Legends**: Search and paginate archives of all-time NBA greats, including career totals, peaks, and honors.
-- 🏆 **All-Time Records**: Query historical NBA benchmarks (scoring, assists, rebounds, etc.) by record category.
-- ⛹️‍♂️ **Active NBA Players**: Explore active rosters, player bios, team affiliations, and career stats.
-- 📅 **Season & Game Logs**: Query season-by-season player averages, single-game peaks, and performance splits against specific opponents.
-- ⚡ **Redis Caching Layer**: Cache-aside caching strategy with dynamic TTLs to deliver sub-millisecond response times for frequent queries.
-- 📄 **Standardized Pagination**: Reusable generic pagination models with full navigation metadata (`total_items`, `total_pages`, `has_next`, `has_previous`).
-- 🩺 **Multi-Service Health Checks**: Integrated health endpoint verifying live connectivity to both MongoDB and Redis.
-- 🧪 **Comprehensive Test Suite**: 100% async test coverage using Pytest, AnyIO, HTTPX, and isolated mock fixtures.
+- **Historical NBA Legends**: Search and paginate archives of all-time NBA greats, including career totals, peaks, and honors.
+- **All-Time Records**: Query historical NBA benchmarks (scoring, assists, rebounds, etc.) by record category.
+- **Active NBA Players**: Explore active rosters, player bios, team affiliations, and career stats.
+- **Season & Game Logs**: Query season-by-season player averages, single-game peaks, and performance splits against specific opponents.
+- **Redis Caching Layer**: Cache-aside caching strategy with dynamic TTLs to deliver sub-millisecond response times for frequent queries.
+- **Standardized Pagination**: Reusable generic pagination models with full navigation metadata (`total_items`, `total_pages`, `has_next`, `has_previous`).
+- **Multi-Service Health Checks**: Integrated health endpoint verifying live connectivity to both MongoDB and Redis.
+- **Comprehensive Test Suite**: 100% async test coverage using Pytest, AnyIO, HTTPX, and isolated mock fixtures.
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Layer | Technology |
 | :--- | :--- |
@@ -43,7 +43,7 @@ Built with **FastAPI**, **MongoDB (PyMongo Async)**, and **Redis**, utilizing **
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -174,27 +174,27 @@ uv run pytest -v
 
 ---
 
-## 📡 API Endpoints Reference
+## API Endpoints Reference
 
-### 🩺 System & Health
+### System & Health
 | Method | Endpoint | Description | Cache |
 | :--- | :--- | :--- | :---: |
 | `GET` | `/` | Service health status (API, MongoDB, Redis) | — |
 
-### 📜 Historical Players
+### Historical Players
 | Method | Endpoint | Description | Cache |
 | :--- | :--- | :--- | :---: |
 | `GET` | `/historical-players/` | List all historical players (paginated: `page`, `limit`) | — |
 | `GET` | `/historical-players/{id}` | Get historical player by numeric ID | — |
 | `GET` | `/historical-players/search/{slug}` | Get historical player by slug (e.g. `michael-jordan`) | — |
 
-### 🏆 Historical Records
+### Historical Records
 | Method | Endpoint | Description | Cache |
 | :--- | :--- | :--- | :---: |
 | `GET` | `/historical-records/` | Get all all-time NBA records | ⚡ Redis |
 | `GET` | `/historical-records/{category}` | Get record by category (e.g. `ALL_TIME_PTS`) | ⚡ Redis |
 
-### ⛹️‍♂️ Current NBA Players
+### Current NBA Players
 | Method | Endpoint | Description | Cache |
 | :--- | :--- | :--- | :---: |
 | `GET` | `/players/` | List active players (paginated: `page`, `limit`) | — |
@@ -206,7 +206,7 @@ uv run pytest -v
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```text
 Nba-FANtastic-API/
@@ -246,6 +246,6 @@ Nba-FANtastic-API/
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the [MIT License](LICENSE).
