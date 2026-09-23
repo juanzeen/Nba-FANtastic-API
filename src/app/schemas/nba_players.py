@@ -34,6 +34,7 @@ class TotalsAvg(TypedDict):
 class Player(BaseModel):
     id: PyObjectId = Field(default=None, alias="_id")
     full_name: str
+    age: int
     slug: str
     height: int
     position: str
