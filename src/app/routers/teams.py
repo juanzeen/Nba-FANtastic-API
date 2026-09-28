@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Path, HTTPException
+from fastapi import APIRouter, Path, HTTPException, Query
 from typing import Annotated
 from ..dependencies import DbDependency
 #from ..utils.cache import get_cached_or_db
 from ..schemas.teams import Team
-from ..schemas.base import ResponseDict, ErrorResponseDict
+from ..schemas.base import ResponseDict, ErrorResponseDict, PaginationParams, PaginationResponse
+import math
 
 router = APIRouter(prefix="/teams", tags=["Teams"])
 
@@ -19,14 +20,28 @@ router = APIRouter(prefix="/teams", tags=["Teams"])
     },
 )
 async def get_teams(
+    pagination: Annotated[PaginationParams, Query()],
     db: DbDependency
-) -> ResponseDict[list[Team]] | ErrorResponseDict:
+) -> PaginationResponse[Team] | ErrorResponseDict:
     tc = db["teams"]
-    teams = await tc.find({}).to_list()
+    limit = pagination.limit
+    skip = limit * (pagination.page - 1)
+    total_teams = await tc.count_documents({})
+    total_pages = math.ceil(total_teams / limit)
+    cursor = tc.find({}).sort("last_season.power_ranking.rank", 1).skip(skip).limit(limit)
+    teams = await cursor.to_list()
     if teams and len(teams) > 0:
         return {
             "message": "Teams successfully retrieved.",
             "data": teams,
+            "pagination": {
+                "page": pagination.page,
+                "limit": pagination.limit,
+                "total_items": total_teams,
+                "total_pages": total_pages,
+                "has_next": pagination.page < total_pages,
+                "has_previous": pagination.page > 1,
+            },
         }
     raise HTTPException(
         status_code=404, detail={"message": "Teams not found."}
