@@ -3,7 +3,7 @@ from typing import Annotated
 from ..dependencies import DbDependency, RedisDependency
 from ..utils.cache import get_cached_or_db
 from ..utils.rate_limiter import rate_limit
-from ..schemas.nba_players import Player
+from ..schemas.players import Player
 from ..schemas.player_seasons import PlayerSeason
 from ..schemas.base import (
     ResponseDict,
