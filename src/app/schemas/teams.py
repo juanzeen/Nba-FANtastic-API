@@ -3,6 +3,8 @@ from pydantic import BaseModel, BeforeValidator, Field, ConfigDict
 
 PyObjectId = Annotated[int, BeforeValidator(int)]
 1
+
+
 class Record(TypedDict):
     wins: Optional[int]
     losses: Optional[int]

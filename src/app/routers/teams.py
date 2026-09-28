@@ -1,9 +1,15 @@
 from fastapi import APIRouter, Path, HTTPException, Query
 from typing import Annotated
 from ..dependencies import DbDependency
-#from ..utils.cache import get_cached_or_db
+
+# from ..utils.cache import get_cached_or_db
 from ..schemas.teams import Team
-from ..schemas.base import ResponseDict, ErrorResponseDict, PaginationParams, PaginationResponse
+from ..schemas.base import (
+    ResponseDict,
+    ErrorResponseDict,
+    PaginationParams,
+    PaginationResponse,
+)
 import math
 
 router = APIRouter(prefix="/teams", tags=["Teams"])
@@ -20,15 +26,16 @@ router = APIRouter(prefix="/teams", tags=["Teams"])
     },
 )
 async def get_teams(
-    pagination: Annotated[PaginationParams, Query()],
-    db: DbDependency
+    pagination: Annotated[PaginationParams, Query()], db: DbDependency
 ) -> PaginationResponse[Team] | ErrorResponseDict:
     tc = db["teams"]
     limit = pagination.limit
     skip = limit * (pagination.page - 1)
     total_teams = await tc.count_documents({})
     total_pages = math.ceil(total_teams / limit)
-    cursor = tc.find({}).sort("last_season.power_ranking.rank", 1).skip(skip).limit(limit)
+    cursor = (
+        tc.find({}).sort("last_season.power_ranking.rank", 1).skip(skip).limit(limit)
+    )
     teams = await cursor.to_list()
     if teams and len(teams) > 0:
         return {
@@ -43,9 +50,7 @@ async def get_teams(
                 "has_previous": pagination.page > 1,
             },
         }
-    raise HTTPException(
-        status_code=404, detail={"message": "Teams not found."}
-    )
+    raise HTTPException(status_code=404, detail={"message": "Teams not found."})
 
 
 @router.get(
@@ -79,6 +84,7 @@ async def get_team_by_id(
         status_code=404, detail={"message": f"Team with id {id} not found."}
     )
 
+
 @router.get("/search/{abb}/")
 async def get_team_by_abbreviation(
     abb: Annotated[
@@ -98,6 +104,4 @@ async def get_team_by_abbreviation(
             "message": f"Team {abb} successfully retrieved.",
             "data": team,
         }
-    raise HTTPException(
-        status_code=404, detail={"message": f"Team {abb} not found."}
-    )
+    raise HTTPException(status_code=404, detail={"message": f"Team {abb} not found."})

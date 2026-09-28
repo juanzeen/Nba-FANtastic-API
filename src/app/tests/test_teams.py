@@ -114,6 +114,7 @@ mocked_team_2 = {
     },
 }
 
+
 @pytest.mark.anyio
 async def test_get_teams():
     mock_db = MagicMock()
@@ -123,9 +124,7 @@ async def test_get_teams():
     mock_cursor.sort.return_value = mock_cursor
     mock_cursor.skip.return_value = mock_cursor
     mock_cursor.limit.return_value = mock_cursor
-    mock_cursor.to_list = AsyncMock(
-        return_value=[mocked_team_1, mocked_team_2]
-    )
+    mock_cursor.to_list = AsyncMock(return_value=[mocked_team_1, mocked_team_2])
     mock_collection.find.return_value = mock_cursor
     mock_db.__getitem__.return_value = mock_collection
     app.dependency_overrides[get_db] = lambda: mock_db
@@ -165,9 +164,7 @@ async def test_get_teams_custom_pagination():
     mock_cursor.sort.return_value = mock_cursor
     mock_cursor.skip.return_value = mock_cursor
     mock_cursor.limit.return_value = mock_cursor
-    mock_cursor.to_list = AsyncMock(
-        return_value=[mocked_team_1, mocked_team_2]
-    )
+    mock_cursor.to_list = AsyncMock(return_value=[mocked_team_1, mocked_team_2])
     mock_collection.find.return_value = mock_cursor
     mock_db.__getitem__.return_value = mock_collection
     app.dependency_overrides[get_db] = lambda: mock_db
@@ -201,9 +198,7 @@ async def test_get_teams_pagination_flags_first_page():
     mock_cursor.sort.return_value = mock_cursor
     mock_cursor.skip.return_value = mock_cursor
     mock_cursor.limit.return_value = mock_cursor
-    mock_cursor.to_list = AsyncMock(
-        return_value=[mocked_team_1, mocked_team_2]
-    )
+    mock_cursor.to_list = AsyncMock(return_value=[mocked_team_1, mocked_team_2])
     mock_collection.find.return_value = mock_cursor
     mock_db.__getitem__.return_value = mock_collection
     app.dependency_overrides[get_db] = lambda: mock_db
@@ -229,9 +224,7 @@ async def test_get_teams_pagination_flags_last_page():
     mock_cursor.sort.return_value = mock_cursor
     mock_cursor.skip.return_value = mock_cursor
     mock_cursor.limit.return_value = mock_cursor
-    mock_cursor.to_list = AsyncMock(
-        return_value=[mocked_team_1, mocked_team_2]
-    )
+    mock_cursor.to_list = AsyncMock(return_value=[mocked_team_1, mocked_team_2])
     mock_collection.find.return_value = mock_cursor
     mock_db.__getitem__.return_value = mock_collection
     app.dependency_overrides[get_db] = lambda: mock_db
@@ -257,9 +250,7 @@ async def test_get_teams_pagination_flags_middle_page():
     mock_cursor.sort.return_value = mock_cursor
     mock_cursor.skip.return_value = mock_cursor
     mock_cursor.limit.return_value = mock_cursor
-    mock_cursor.to_list = AsyncMock(
-        return_value=[mocked_team_1, mocked_team_2]
-    )
+    mock_cursor.to_list = AsyncMock(return_value=[mocked_team_1, mocked_team_2])
     mock_collection.find.return_value = mock_cursor
     mock_db.__getitem__.return_value = mock_collection
     app.dependency_overrides[get_db] = lambda: mock_db
@@ -440,6 +431,7 @@ async def test_fail_get_teams_limit_too_high():
     assert error_type == "less_than_equal"
     assert message == "Input should be less than or equal to 100"
 
+
 @pytest.mark.anyio
 async def test_get_team_by_id():
     mock_db = MagicMock()
@@ -537,6 +529,7 @@ async def test_fail_get_team_by_id_not_integer():
 
     assert response.status_code == 422
     assert detail[0]["type"] == "int_parsing"
+
 
 @pytest.mark.anyio
 async def test_get_team_by_abbreviation():

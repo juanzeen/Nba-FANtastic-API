@@ -6,7 +6,7 @@ from nba_api.stats.endpoints import (
     alltimeleadersgrids,
     teaminfocommon,
     leaguestandingsv3,
-    leaguedashteamstats
+    leaguedashteamstats,
 )
 import pandas as pd
 import time
@@ -549,56 +549,63 @@ def append_player_career_span_actual_players():
         time.sleep(1.5)
     df.to_csv("nba_players.csv", index=False)
 
+
 def get_team_data():
     nt = teams.teams
     docs = []
     for team in nt:
         team_id = team[0]
-        advancedStats = leaguedashteamstats.LeagueDashTeamStats(team_id_nullable=team_id,measure_type_detailed_defense="Advanced").get_data_frames()[0]
-        leagueStats = leaguestandingsv3.LeagueStandingsV3(season="2024-25").get_data_frames()[0]
+        advancedStats = leaguedashteamstats.LeagueDashTeamStats(
+            team_id_nullable=team_id, measure_type_detailed_defense="Advanced"
+        ).get_data_frames()[0]
+        leagueStats = leaguestandingsv3.LeagueStandingsV3(
+            season="2024-25"
+        ).get_data_frames()[0]
         commonInfo = teaminfocommon.TeamInfoCommon(team_id=team_id).get_data_frames()[0]
-        leagueStats['Rank'] = leagueStats["WinPCT"].rank(ascending=False, method="min").astype(int)
-        team_row = leagueStats[leagueStats['TeamID'] == team_id].iloc[0]
+        leagueStats["Rank"] = (
+            leagueStats["WinPCT"].rank(ascending=False, method="min").astype(int)
+        )
+        team_row = leagueStats[leagueStats["TeamID"] == team_id].iloc[0]
         print(f"rank: {team_row['Rank']}")
         doc = {
             "_id": team_id,
-            "abbreviation": commonInfo['TEAM_ABBREVIATION'][0],
+            "abbreviation": commonInfo["TEAM_ABBREVIATION"][0],
             "name": team[5],
-            "city": commonInfo['TEAM_CITY'][0],
-            "conference": team_row['Conference'],
-            "division": team_row['Division'],
+            "city": commonInfo["TEAM_CITY"][0],
+            "conference": team_row["Conference"],
+            "division": team_row["Division"],
             "founded_in": team[3],
             "championships": len(team[7]),
             "last_season": {
-                "rank": int(team_row['Rank']),
+                "rank": int(team_row["Rank"]),
                 "record": {
-                    "wins": int(advancedStats['W'][0]),
-                    "losses": int(advancedStats['L'][0]),
-                    "win_pct": float(advancedStats['W_PCT'][0]),
-                    "home": team_row['HOME'],
-                    "road": team_row['ROAD']
-                    },
+                    "wins": int(advancedStats["W"][0]),
+                    "losses": int(advancedStats["L"][0]),
+                    "win_pct": float(advancedStats["W_PCT"][0]),
+                    "home": team_row["HOME"],
+                    "road": team_row["ROAD"],
+                },
                 "power_ranking": {
                     "rank": None,
                     "tier": None,
                     "power_score": None,
                     "trend": None,
-                    },
+                },
                 "metrics": {
                     "pace": float(advancedStats["PACE"][0]),
                     "offensive_rating": float(advancedStats["OFF_RATING"][0]),
                     "defensive_rating": float(advancedStats["DEF_RATING"][0]),
                     "net_rating": float(advancedStats["NET_RATING"][0]),
-                    "pts_per_game": float(team_row['PointsPG']),
-                    "pts_allowed_per_game": float(team_row['OppPointsPG']),
-                    }
+                    "pts_per_game": float(team_row["PointsPG"]),
+                    "pts_allowed_per_game": float(team_row["OppPointsPG"]),
                 },
+            },
             "actual_season": {
                 "rank": None,
                 "record": {
-                "wins": None,
-                "losses": None,
-                "win_pct": None,
+                    "wins": None,
+                    "losses": None,
+                    "win_pct": None,
                 },
                 "power_ranking": {
                     "rank": None,
@@ -610,26 +617,28 @@ def get_team_data():
                     "net_rating": None,
                     "pts_per_game": None,
                     "pts_allowed_per_game": None,
-                    }
-                }
-            }
+                },
+            },
+        }
         time.sleep(1.0)
         print(doc)
         docs.append(doc)
     with open("teams_metrics.json", "w") as f:
-         json.dump(docs, f)
-         f.close()
+        json.dump(docs, f)
+        f.close()
+
 
 def get_tier_by_rank(rank: int) -> str:
     if rank <= 5:
-         return "Championship Contender"
+        return "Championship Contender"
     if rank <= 10:
-         return "Playoff Contender"
+        return "Playoff Contender"
     if rank <= 18:
         return "Play-in Contender"
     if rank <= 24:
         return "Lottery"
     return "Rebuilding"
+
 
 def calculate_power_score():
     with open("teams_metrics.json", "r") as f:
@@ -646,8 +655,14 @@ def calculate_power_score():
             power_score = round((win_pct * 0.4 + normalized_net * 0.6) * 100, 1)
             t["last_season"]["power_ranking"]["power_score"] = power_score
 
-        teams = [team for team in raw if t['last_season']['power_ranking']['power_score'] is not None]
-        teams.sort(key=lambda x: x['last_season']['power_ranking']['power_score'], reverse=True)
+        teams = [
+            team
+            for team in raw
+            if t["last_season"]["power_ranking"]["power_score"] is not None
+        ]
+        teams.sort(
+            key=lambda x: x["last_season"]["power_ranking"]["power_score"], reverse=True
+        )
 
         for power_rank, t in enumerate(teams, start=1):
             pr = t["last_season"]["power_ranking"]

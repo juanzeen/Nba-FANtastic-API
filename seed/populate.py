@@ -671,12 +671,14 @@ def populate_players_age():
         print(f"Added age for player {pid} | {age} years old")
         time.sleep(0.5)
 
+
 def populate_teams():
     col = get_db_collection("teams")
     with open("normalized_teams_data.json", "r") as f:
         teams = json.load(f)
         col.insert_many(teams)
         f.close()
+
 
 # populate_historical_records()
 # populate_historical_players()
