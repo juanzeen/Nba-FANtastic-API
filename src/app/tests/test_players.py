@@ -28,6 +28,7 @@ mock_p1 = {
     "height": 203,
     "id": 1630173,
     "position": "Forward",
+    "age": 20,
     "season": {
         "totals": {
             "games": 0,
@@ -66,6 +67,7 @@ mock_p2 = {
     "full_name": "Precious Achiuwa",
     "height": 203,
     "id": 1630173,
+    "age": 21,
     "position": "Forward",
     "season": {
         "totals": {
