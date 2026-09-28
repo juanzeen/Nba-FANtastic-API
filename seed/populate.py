@@ -1,18 +1,30 @@
 import math
+import json
 import os
 import time
 import dotenv
 import pandas as pd
 import numpy as np
 from pymongo import MongoClient
-from nba_api.stats.endpoints import playercareerstats, playergamelog
+from nba_api.stats.endpoints import playercareerstats, playergamelog, commonplayerinfo
 from nba_api.stats.static import teams
+from datetime import datetime
 
 
 def convert_to_cm(fi: str) -> float:
     feet, inch = fi.split("-")
     height_cm = round((int(feet) * 30.48) + (int(inch) * 2.54))
     return height_cm
+
+
+def calculate_age(birthdate: str) -> int:
+    birthdate = datetime.fromisoformat(birthdate)
+    today = datetime.now().date()
+    return (
+        today.year
+        - birthdate.year
+        - ((today.month, today.day) < (birthdate.month, birthdate.day))
+    )
 
 
 def get_db_collection(collection_name: str):
@@ -640,8 +652,38 @@ def populate_player_seasons():
         sync_player_seasons(pid, seasons)
 
 
-populate_historical_records()
-populate_historical_players()
-populate_historical_players_seasons()
-populate_nba_players()
-populate_player_seasons()
+def populate_players_age():
+    df = pd.read_csv("nba_players.csv")
+    collection = get_db_collection("players")
+    pids = df["ID"].tolist()
+    for pid in pids:
+        p_birthday = commonplayerinfo.CommonPlayerInfo(player_id=pid).get_data_frames()[
+            0
+        ]["BIRTHDATE"][0]
+        age = calculate_age(p_birthday)
+        collection.update_one(
+            {"_id": pid},
+            {
+                "$set": {"age": age},
+            },
+            upsert=True,
+        )
+        print(f"Added age for player {pid} | {age} years old")
+        time.sleep(0.5)
+
+
+def populate_teams():
+    col = get_db_collection("teams")
+    with open("normalized_teams_data.json", "r") as f:
+        teams = json.load(f)
+        col.insert_many(teams)
+        f.close()
+
+
+# populate_historical_records()
+# populate_historical_players()
+# populate_historical_players_seasons()
+# populate_nba_players()
+# populate_player_seasons()
+# populate_players_age()
+populate_teams()
