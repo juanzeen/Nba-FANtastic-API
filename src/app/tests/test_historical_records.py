@@ -4,31 +4,36 @@ import pytest
 from ..main import app
 from ..dependencies import get_db
 
+mock_1 = {
+    "_id": 1,
+    "value": 43440,
+    "label": "points",
+    "title": "Most points of all time",
+    "record": "ALL_TIME_PTS",
+    "leader_id": 2544,
+    "leader_full_name": "LeBron James",
+    "is_active": True,
+    "details": {"season": "", "team": ""},
+}
+
+mock_2 = {
+    "_id": 2,
+    "value": 15806,
+    "label": "assists",
+    "title": "Most assists of all time",
+    "record": "ALL_TIME_AST",
+    "leader_id": 304,
+    "leader_full_name": "John Stockton",
+    "is_active": False,
+    "details": {"season": "", "team": ""},
+}
+
 
 @pytest.mark.anyio
 async def test_get_historical_records(mock_redis):
     mock_db = MagicMock()
     mock_collection = MagicMock()
-    mock_collection.find.return_value.to_list = AsyncMock(
-        return_value=[
-            {
-                "value": 43440,
-                "record": "ALL_TIME_PTS",
-                "leader_id": 2544,
-                "leader_full_name": "LeBron James",
-                "is_active": True,
-                "details": {"season": "", "team": ""},
-            },
-            {
-                "value": 15806,
-                "record": "ALL_TIME_AST",
-                "leader_id": 304,
-                "leader_full_name": "John Stockton",
-                "is_active": False,
-                "details": {"season": "", "team": ""},
-            },
-        ]
-    )
+    mock_collection.find.return_value.to_list = AsyncMock(return_value=[mock_1, mock_2])
     mock_db.__getitem__.return_value = mock_collection
     app.dependency_overrides[get_db] = lambda: mock_db
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://") as ac:
@@ -80,16 +85,7 @@ async def test_fail_get_historical_records_empty_array(mock_redis):
 async def test_get_historical_record_by_category(mock_redis):
     mock_db = MagicMock()
     mock_collection = MagicMock()
-    mock_collection.find_one = AsyncMock(
-        return_value={
-            "value": 43440,
-            "record": "ALL_TIME_PTS",
-            "leader_id": 2544,
-            "leader_full_name": "LeBron James",
-            "is_active": True,
-            "details": {"season": "", "team": ""},
-        },
-    )
+    mock_collection.find_one = AsyncMock(return_value=mock_1)
     mock_db.__getitem__.return_value = mock_collection
     app.dependency_overrides[get_db] = lambda: mock_db
     async with AsyncClient(
