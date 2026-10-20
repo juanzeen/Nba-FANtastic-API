@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Path, HTTPException
+from fastapi import APIRouter, Path, HTTPException, Query
 from typing import Annotated
 from ..dependencies import DbDependency, RedisDependency
 from ..utils.cache import get_cached_or_db
-from ..schemas.historical_records import HistoricalRecord
+from ..schemas.historical_records import HistoricalRecord, LabelsFilter
 from ..schemas.base import ResponseDict, ErrorResponseDict
 
 router = APIRouter(prefix="/historical-records", tags=["Historical Records"])
@@ -19,13 +19,18 @@ router = APIRouter(prefix="/historical-records", tags=["Historical Records"])
     },
 )
 async def get_historical_records(
-    db: DbDependency, redis: RedisDependency
+    filter: Annotated[LabelsFilter, Query()], db: DbDependency, redis: RedisDependency
 ) -> ResponseDict[list[HistoricalRecord]] | ErrorResponseDict:
     hr = db["historical_records"]
+    cache_key = (
+        f"historical_records:label:{filter.label}"
+        if filter.label
+        else "historical_records"
+    )
     records = await get_cached_or_db(
         redis=redis,
-        cache_key="historical_records",
-        fetch_from_db=hr.find({}, {"_id": 0}).to_list(),
+        cache_key=cache_key,
+        fetch_from_db=hr.find({"label": filter.label}).to_list(),
         expire_seconds=86400,
     )
     if records and len(records) > 0:
@@ -61,7 +66,7 @@ async def get_historical_record_by_category(
     redis: RedisDependency,
 ) -> ResponseDict[HistoricalRecord] | ErrorResponseDict:
     hr = db["historical_records"]
-    db_function = hr.find_one({"record": category}, {"_id": 0})
+    db_function = hr.find_one({"record": category})
     cache_key = f"historical_records:{category}"
     record = await get_cached_or_db(
         redis=redis,

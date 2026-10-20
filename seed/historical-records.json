@@ -1,0 +1,324 @@
+[
+  {
+    "_id": 1,
+    "record": "ALL_TIME_AST",
+    "title": "Most assists of all time",
+    "label": "assists",
+    "value": 15806,
+    "leader_full_name": "John Stockton",
+    "leader_id": 304,
+    "is_active": false,
+    "details": {
+      "season": null,
+      "team": null
+    }
+  },
+  {
+    "_id": 2,
+    "record": "ALL_TIME_BLK",
+    "title": "Most blocks of all time",
+    "label": "blocks",
+    "value": 3830,
+    "leader_full_name": "Hakeem Olajuwon",
+    "leader_id": 165,
+    "is_active": false,
+    "details": {
+      "season": null,
+      "team": null
+    }
+  },
+  {
+    "_id": 3,
+    "record": "ALL_TIME_FG3M",
+    "title": "Most 3-point field goal made of all time",
+    "label": "3pm",
+    "value": 4248,
+    "leader_full_name": "Stephen Curry",
+    "leader_id": 201939,
+    "is_active": true,
+    "details": {
+      "season": null,
+      "team": null
+    }
+  },
+  {
+    "_id": 4,
+    "record": "ALL_TIME_FGM",
+    "title": "Most field goal of all time",
+    "label": "fg",
+    "value": 15961,
+    "leader_full_name": "LeBron James",
+    "leader_id": 2544,
+    "is_active": true,
+    "details": {
+      "season": null,
+      "team": null
+    }
+  },
+  {
+    "_id": 5,
+    "record": "ALL_TIME_GP",
+    "title": "Most games played of all time",
+    "label": "gp",
+    "value": 1622,
+    "leader_full_name": "LeBron James",
+    "leader_id": 2544,
+    "is_active": true,
+    "details": {
+      "season": null,
+      "team": null
+    }
+  },
+  {
+    "_id": 6,
+    "record": "ALL_TIME_PTS",
+    "title": "Most points of all time",
+    "label": "points",
+    "value": 43440,
+    "leader_full_name": "LeBron James",
+    "leader_id": 2544,
+    "is_active": true,
+    "details": {
+      "season": null,
+      "team": null
+    }
+  },
+  {
+    "_id": 7,
+    "record": "ALL_TIME_REB",
+    "title": "Most rebounds of all time",
+    "label": "rebounds",
+    "value": 23924,
+    "leader_full_name": "Wilt Chamberlain",
+    "leader_id": 76375,
+    "is_active": false,
+    "details": {
+      "season": null,
+      "team": null
+    }
+  },
+  {
+    "_id": 8,
+    "record": "ALL_TIME_STL",
+    "title": "Most steals of all time",
+    "label": "steals",
+    "value": 3265,
+    "leader_full_name": "John Stockton",
+    "leader_id": 304,
+    "is_active": false,
+    "details": {
+      "season": null,
+      "team": null
+    }
+  },
+  {
+    "_id": 9,
+    "record": "SEASON_APG",
+    "title": "Highest average of assists in a season",
+    "label": "assists",
+    "value": 14.5,
+    "leader_full_name": "John Stockton",
+    "leader_id": 304,
+    "is_active": false,
+    "details": {
+      "season": "1989-1990",
+      "team": "Utah Jazz"
+    }
+  },
+  {
+    "_id": 10,
+    "record": "SEASON_BPG",
+    "title": "Highest average of blocks in a season",
+    "label": "blocks",
+    "value": 5.6,
+    "leader_full_name": "Mark Eaton",
+    "leader_id": 76631,
+    "is_active": false,
+    "details": {
+      "season": "1984-1985",
+      "team": "Utah Jazz"
+    }
+  },
+  {
+    "_id": 11,
+    "record": "SEASON_3PG",
+    "title": "Highest average of 3-point fiel goal made in a season",
+    "label": "3pm",
+    "value": 5.3,
+    "leader_full_name": "Stephen Curry",
+    "leader_id": 201939,
+    "is_active": true,
+    "details": {
+      "season": "2020-2021",
+      "team": "Golden State Warriors"
+    }
+  },
+  {
+    "_id": 12,
+    "record": "SEASON_FGPG",
+    "title": "Highest average of field goal made in a season",
+    "label": "fg",
+    "value": 20,
+    "leader_full_name": "Wilt Chamberlain",
+    "leader_id": 76375,
+    "is_active": false,
+    "details": {
+      "season": "1961-1962",
+      "team": "Philadelphia 76ers"
+    }
+  },
+  {
+    "_id": 13,
+    "record": "SEASON_PPG",
+    "title": "Highest average of points in a season",
+    "label": "points",
+    "value": 50.4,
+    "leader_full_name": "Wilt Chamberlain",
+    "leader_id": 76375,
+    "is_active": false,
+    "details": {
+      "season": "1961-1962",
+      "team": "Philadelphia 76ers"
+    }
+  },
+  {
+    "_id": 14,
+    "record": "SEASON_RPG",
+    "title": "Highest average of rebounds in a season",
+    "label": "rebounds",
+    "value": 27.2,
+    "leader_full_name": "Wilt Chamberlain",
+    "leader_id": 76375,
+    "is_active": false,
+    "details": {
+      "season": "1960-1961",
+      "team": "Philadelphia 76ers"
+    }
+  },
+  {
+    "_id": 15,
+    "record": "SEASON_SPG",
+    "title": "Highest average of steals in a season",
+    "label": "steals",
+    "value": 3.7,
+    "leader_full_name": "Alvin Robertson",
+    "leader_id": 926,
+    "is_active": false,
+    "details": {
+      "season": "1985-1986",
+      "team": "San Antonio Spurs"
+    }
+  },
+  {
+    "_id": 16,
+    "record": "GAME_AST",
+    "title": "Most assists in a single game",
+    "label": "assists",
+    "value": 30,
+    "leader_full_name": "Scott Skiles",
+    "leader_id": 101,
+    "is_active": false,
+    "details": {
+      "season": "1990-1991",
+      "team": "Orlando Magic"
+    }
+  },
+  {
+    "_id": 17,
+    "record": "GAME_BLK",
+    "title": "Most blocks in a single game",
+    "label": "blocks",
+    "value": 17,
+    "leader_full_name": "Elmore Smith",
+    "leader_id": 78188,
+    "is_active": false,
+    "details": {
+      "season": "1973-1974",
+      "team": "Los Angeles Lakers"
+    }
+  },
+  {
+    "_id": 18,
+    "record": "GAME_3PM",
+    "title": "Most 3-point field goal made in a single game",
+    "label": "3pm",
+    "value": 14,
+    "leader_full_name": "Klay Thompson",
+    "leader_id": 202691,
+    "is_active": false,
+    "details": {
+      "season": "2018-2019",
+      "team": "Golden State Warriors"
+    }
+  },
+  {
+    "_id": 19,
+    "record": "GAME_FGM",
+    "title": "Most field goal made in a single game",
+    "label": "fg",
+    "value": 36,
+    "leader_full_name": "Wilt Chamberlain",
+    "leader_id": 76375,
+    "is_active": false,
+    "details": {
+      "season": "1961-1962",
+      "team": "Philadelphia 76ers"
+    }
+  },
+  {
+    "_id": 20,
+    "record": "GAME_PTS",
+    "title": "Most points in a single game",
+    "label": "points",
+    "value": 100,
+    "leader_full_name": "Wilt Chamberlain",
+    "leader_id": 76375,
+    "is_active": false,
+    "details": {
+      "season": "1961-1962",
+      "team": "Philadelphia 76ers"
+    }
+  },
+  {
+    "_id": 21,
+    "record": "GAME_REB",
+    "title": "Most rebounds in a single game",
+    "label": "rebounds",
+    "value": 55,
+    "leader_full_name": "Wilt Chamberlain",
+    "leader_id": 76375,
+    "is_active": false,
+    "details": {
+      "season": "1960-1961",
+      "team": "Philadelphia 76ers"
+    }
+  },
+  {
+    "_id": 22,
+    "record": "GAME_STL_1",
+    "title": "Most steals in a single game (draw)",
+    "label": "steals",
+    "value": 11,
+    "leader_full_name": "Larry Kenon",
+    "leader_id": 77246,
+    "is_active": false,
+    "details": {
+      "season": "1976-1977",
+      "team": "San Antonio Spurs"
+    }
+  },
+  {
+    "_id": 23,
+    "record": "GAME_STL_2",
+    "title": "Most steals in a single game (draw)",
+    "label": "steals",
+    "value": 11,
+    "leader_full_name": "Kendall Gill",
+    "leader_id": 383,
+    "is_active": false,
+    "details": {
+      "season": "1998-1999",
+      "team": "Brooklyn Nets"
+    }
+  }
+]
