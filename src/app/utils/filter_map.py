@@ -20,10 +20,11 @@ HISTORICAL_PLAYERS_MAP = {
     "reb": "career_totals.reb",
     "stl": "career_totals.stl",
     "blk": "career_totals.blk",
+    "championships": "honors.championships"
 }
 
 
-def get_filter_key(requested_from: str, stat: str, period: str) -> str:
+def get_filter_key(requested_from: str, stat: str, period: str = "career") -> str:
     if not stat:
         return "_id"
 

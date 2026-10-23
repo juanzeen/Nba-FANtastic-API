@@ -27,6 +27,10 @@ class StatsFilters(BaseModel):
     period: Literal["season", "career"] | None = "career"
     order: Literal["asc", "desc"] | None = None
 
+class HistoricalStatsFilters(BaseModel):
+    stat: Literal["pts", "ast", "reb", "stl", "blk", "championships"] | None = None
+    order: Literal["asc", "desc"] | None = None
+
 
 class PaginationDetails(BaseModel):
     page: int
