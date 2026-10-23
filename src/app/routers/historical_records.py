@@ -27,10 +27,11 @@ async def get_historical_records(
         if filter.label
         else "historical_records"
     )
+    find_param = {"label": filter.label} if filter.label else {}
     records = await get_cached_or_db(
         redis=redis,
         cache_key=cache_key,
-        fetch_from_db=hr.find({"label": filter.label}).to_list(),
+        fetch_from_db=hr.find(find_param).to_list(),
         expire_seconds=86400,
     )
     if records and len(records) > 0:

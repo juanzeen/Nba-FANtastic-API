@@ -157,7 +157,6 @@ def calculate_matchup_prediction(
     print(f"{player} | {team}")
 
     pace_factor = calculate_pace_factor(team.get("pace"))
-    age = player.get("age")
 
     stats_to_predict = {
         "pts": player.get("pts_avg", 0.0),

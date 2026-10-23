@@ -1,6 +1,8 @@
 from fastapi import FastAPI, Depends, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from .dependencies import get_client, RedisDependency
 from .routers import historical_players, historical_records, players, teams, jobs
+import os
 
 app = FastAPI()
 
@@ -9,6 +11,16 @@ app.include_router(historical_records.router, prefix="/api/v1")
 app.include_router(players.router, prefix="/api/v1")
 app.include_router(teams.router, prefix="/api/v1")
 app.include_router(jobs.router, prefix="/api/v1")
+
+origins = os.getenv("ALLOWED_ORIGINS", "*").split(",")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_methods="GET",
+    allow_credentials=False,
+    allow_headers=["*"],
+)
 
 
 @app.get(

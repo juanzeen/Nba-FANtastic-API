@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Path, HTTPException, Query
+from fastapi import APIRouter, Path, HTTPException, Query, Depends
 from typing import Annotated
 from ..dependencies import DbDependency, RedisDependency
 
@@ -11,6 +11,8 @@ from ..schemas.base import (
     PaginationParams,
     PaginationResponse,
 )
+from ..schemas.custom_filters import TeamFilters
+from ..utils.filter_map import get_filter_key
 import math
 
 router = APIRouter(prefix="/teams", tags=["Teams"])
@@ -27,15 +29,19 @@ router = APIRouter(prefix="/teams", tags=["Teams"])
     },
 )
 async def get_teams(
-    pagination: Annotated[PaginationParams, Query()], db: DbDependency
+    pagination: Annotated[PaginationParams, Depends()],
+    filter: Annotated[TeamFilters, Depends()],
+    db: DbDependency,
 ) -> PaginationResponse[Team] | ErrorResponseDict:
     tc = db["teams"]
     limit = pagination.limit
     skip = limit * (pagination.page - 1)
     total_teams = await tc.count_documents({})
     total_pages = math.ceil(total_teams / limit)
+    sort_key = get_filter_key("teams", filter.stat)
+    sort_order = -1 if filter.order == "desc" else 1
     cursor = (
-        tc.find({}).sort("last_season.power_ranking.rank", 1).skip(skip).limit(limit)
+        tc.find({}).sort([(sort_key, sort_order), ("_id", 1)]).skip(skip).limit(limit)
     )
     teams = await cursor.to_list()
     if teams and len(teams) > 0:

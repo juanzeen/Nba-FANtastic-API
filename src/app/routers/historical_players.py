@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Query, Depends, Path, HTTPException
+from fastapi import APIRouter, Depends, Path, HTTPException
 from typing import Annotated
 from ..dependencies import DbDependency, RedisDependency
 from ..utils.cache import get_cached_or_db
@@ -10,8 +10,8 @@ from ..schemas.base import (
     ErrorResponseDict,
     PaginationParams,
     PaginationResponse,
-    StatsFilters,
 )
+from ..schemas.custom_filters import HistoricalStatsFilters
 import math
 
 router = APIRouter(prefix="/historical-players", tags=["Historical Players"])
@@ -30,7 +30,7 @@ router = APIRouter(prefix="/historical-players", tags=["Historical Players"])
 )
 async def get_historical_players(
     pagination: Annotated[PaginationParams, Depends()],
-    filter: Annotated[StatsFilters, Depends()],
+    filter: Annotated[HistoricalStatsFilters, Depends()],
     db: DbDependency,
 ) -> PaginationResponse[HistoricalPlayer] | ErrorResponseDict:
     hp = db["historical_players"]
@@ -38,9 +38,17 @@ async def get_historical_players(
     skip = (pagination.page - 1) * limit
     total_players = await hp.count_documents({})
     total_pages = math.ceil(total_players / limit)
-    sort_key = get_filter_key("historical_players", filter.stat, filter.period)
+    sort_key = get_filter_key("historical_players", filter.stat)
     sort_order = -1 if filter.order == "desc" else 1
-    cursor = hp.find({}).sort(sort_key, sort_order).skip(skip).limit(limit)
+    position_filter = (
+        {} if not filter.position else {"position": filter.position.capitalize()}
+    )
+    cursor = (
+        hp.find(position_filter)
+        .sort([(sort_key, sort_order), ("_id", 1)])
+        .skip(skip)
+        .limit(limit)
+    )
     players = await cursor.to_list()
     if not players:
         raise HTTPException(
