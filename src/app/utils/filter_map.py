@@ -20,7 +20,18 @@ HISTORICAL_PLAYERS_MAP = {
     "reb": "career_totals.reb",
     "stl": "career_totals.stl",
     "blk": "career_totals.blk",
-    "championships": "honors.championships"
+    "championships": "honors.championships",
+}
+
+TEAMS_MAP = {
+    "pts": "actual_season.metrics.pts_per_game",
+    "ast": "actual_season.metrics.ast_per_game",
+    "reb": "actual_season.metrics.reb_per_game",
+    "stl": "actual_season.metrics.stl_per_game",
+    "blk": "actual_season.metrics.blk_per_game",
+    "championships": "championships",
+    "power-rank": "actual_season.power_ranking.rank",
+    "league-rank": "actual_season.rank",
 }
 
 
@@ -36,3 +47,6 @@ def get_filter_key(requested_from: str, stat: str, period: str = "career") -> st
 
     if requested_from == "historical_players":
         return HISTORICAL_PLAYERS_MAP.get(stat)
+
+    if requested_from == "teams":
+        return TEAMS_MAP.get(stat)

@@ -10,8 +10,8 @@ from ..schemas.base import (
     ErrorResponseDict,
     PaginationParams,
     PaginationResponse,
-    HistoricalStatsFilters,
 )
+from ..schemas.custom_filters import HistoricalStatsFilters
 import math
 
 router = APIRouter(prefix="/historical-players", tags=["Historical Players"])

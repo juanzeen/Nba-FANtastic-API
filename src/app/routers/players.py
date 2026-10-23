@@ -12,8 +12,8 @@ from ..schemas.base import (
     ErrorResponseDict,
     PaginationResponse,
     PaginationParams,
-    StatsFilters,
 )
+from ..schemas.custom_filters import StatsFilters
 from ..services.season_predictor import (
     calculate_player_year_prediction,
     calculate_confidence_intervals,
