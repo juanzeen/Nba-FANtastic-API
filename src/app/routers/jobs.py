@@ -4,7 +4,7 @@ from fastapi import APIRouter, Header, HTTPException, status, Depends
 from ..jobs.daily_sync import run_daily_sync
 from ..jobs.weekly_sync import run_weekly_sync
 
-router = APIRouter(prefix="/jobs", tags=["Cron Jobs"])
+router = APIRouter(prefix="/jobs", tags=["Cron Jobs"], include_in_schema=False)
 
 SECRET = os.getenv("CRON_SECRET")
 
