@@ -4,6 +4,7 @@ from ..dependencies import DbDependency, RedisDependency
 from ..utils.cache import get_cached_or_db, get_cached, set_cache
 from ..utils.rate_limiter import rate_limit
 from ..utils.filter_map import get_filter_key
+from ..utils.search import db_text_search
 from ..schemas.players import Player
 from ..schemas.player_seasons import PlayerSeason
 from ..schemas.predictions import SeasonPrediction, MatchupPrediction
@@ -75,6 +76,43 @@ async def get_nba_players(
         status_code=404, detail={"message": "Actual NBA players not found."}
     )
 
+@router.get(
+    "/search",
+    status_code=200,
+    responses={
+        404: {
+            "model": ErrorResponseDict,
+            "description": "No players found matching this query.",
+        }
+    },
+    dependencies=[rate_limit(40, 60)],
+)
+async def get_nba_players_by_name(
+    q: Annotated[
+        str,
+        Query(
+            min_length=2,
+            max_length=50,
+            title="Player name to search",
+            description="Fetches all players with the correspondent string from query params in player full_name",
+        ),
+    ],
+    db: DbDependency,
+    redis: RedisDependency,
+) -> ResponseDict[list[Player]] | ErrorResponseDict:
+    np = db["players"]
+    normalized_query = q.strip().lower()
+    cache_key = f"players:search:{normalized_query}"
+    player = await get_cached_or_db(
+        redis=redis,
+        cache_key=cache_key,
+        fetch_from_db=db_text_search(np, normalized_query),
+    )
+    if player:
+        return {"message": "Player successfully retrieved.", "data": player}
+    raise HTTPException(
+        status_code=404, detail={"message": f"No players found matching this query."}
+    )
 
 @router.get(
     "/{id}",
@@ -108,41 +146,6 @@ async def get_nba_player_by_id(
     )
 
 
-@router.get(
-    "/search/{slug}",
-    status_code=200,
-    responses={
-        404: {
-            "model": ErrorResponseDict,
-            "description": "Actual NBA player with slug xxx-xxxx not found.",
-        }
-    },
-    dependencies=[rate_limit(60, 60)],
-)
-async def get_nba_player_by_slug(
-    slug: Annotated[
-        str,
-        Path(
-            min_length=7,
-            title="Slug from the player who will be fetched",
-            description="Slug in the format name-lastname",
-        ),
-    ],
-    db: DbDependency,
-    redis: RedisDependency,
-) -> ResponseDict[Player] | ErrorResponseDict:
-    np = db["players"]
-    cache_key = f"players:slug:{slug}"
-    player = await get_cached_or_db(
-        redis=redis,
-        cache_key=cache_key,
-        fetch_from_db=np.find_one({"slug": slug}),
-    )
-    if player:
-        return {"message": "Player successfully retrieved.", "data": player}
-    raise HTTPException(
-        status_code=404, detail={"message": f"Player with slug {slug} not found."}
-    )
 
 
 # Seasons
