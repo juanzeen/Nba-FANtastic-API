@@ -57,7 +57,7 @@ class Games(TypedDict):
     opponent: str
     result: str
     is_home: bool
-    playoffs: bool
+    playoffs: Optional[bool]
     minutes: str
     pts: int
     ast: int
