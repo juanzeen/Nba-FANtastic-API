@@ -45,13 +45,13 @@ async def get_nba_players(
     np = db["players"]
     limit = pagination.limit
     skip = limit * (pagination.page - 1)
-    total_players = await np.count_documents({})
-    total_pages = math.ceil(total_players / limit)
     sort_key = get_filter_key("players", filter.stat, filter.period)
     sort_order = -1 if filter.order == "desc" else 1
     position_filter = (
         {} if not filter.position else {"position": filter.position.capitalize()}
     )
+    total_players = await np.count_documents(position_filter)
+    total_pages = math.ceil(total_players / limit)
     cursor = (
         np.find(position_filter)
         .sort([(sort_key, sort_order), ("_id", 1)])

@@ -37,13 +37,13 @@ async def get_historical_players(
     hp = db["historical_players"]
     limit = pagination.limit
     skip = (pagination.page - 1) * limit
-    total_players = await hp.count_documents({})
-    total_pages = math.ceil(total_players / limit)
     sort_key = get_filter_key("historical_players", filter.stat)
     sort_order = -1 if filter.order == "desc" else 1
     position_filter = (
         {} if not filter.position else {"position": filter.position.capitalize()}
     )
+    total_players = await hp.count_documents(position_filter)
+    total_pages = math.ceil(total_players / limit)
     cursor = (
         hp.find(position_filter)
         .sort([(sort_key, sort_order), ("_id", 1)])
