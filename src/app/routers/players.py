@@ -76,6 +76,7 @@ async def get_nba_players(
         status_code=404, detail={"message": "Actual NBA players not found."}
     )
 
+
 @router.get(
     "/search",
     status_code=200,
@@ -114,6 +115,7 @@ async def get_nba_players_by_name(
         status_code=404, detail={"message": f"No players found matching this query."}
     )
 
+
 @router.get(
     "/{id}",
     status_code=200,
@@ -144,8 +146,6 @@ async def get_nba_player_by_id(
     raise HTTPException(
         status_code=404, detail={"message": f"Player with id {id} not found."}
     )
-
-
 
 
 # Seasons

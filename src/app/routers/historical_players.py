@@ -112,6 +112,7 @@ async def search_historical_players_by_name(
         status_code=404, detail={"message": f"No players found matching this query."}
     )
 
+
 @router.get(
     "/{id}",
     status_code=200,

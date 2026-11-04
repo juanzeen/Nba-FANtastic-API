@@ -59,6 +59,7 @@ async def get_teams(
         }
     raise HTTPException(status_code=404, detail={"message": "Teams not found."})
 
+
 @router.get(
     "/search",
     responses={
@@ -92,7 +93,9 @@ async def search_teams_by_name(
             "message": f"Teams successfully retrieved.",
             "data": team,
         }
-    raise HTTPException(status_code=404, detail={"message": f"No teams found matching this query."})
+    raise HTTPException(
+        status_code=404, detail={"message": f"No teams found matching this query."}
+    )
 
 
 @router.get(
