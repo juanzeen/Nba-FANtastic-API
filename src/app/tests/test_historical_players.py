@@ -506,54 +506,63 @@ async def test_fail_get_historical_player_by_id_big_id():
 
 
 @pytest.mark.anyio
-async def test_get_historical_player_by_slug(mock_redis):
+async def test_search_historical_players_by_name(mock_redis):
     mock_db = MagicMock()
+    mock_collection = MagicMock()
     mock_cursor = MagicMock()
-    mock_cursor.find_one = AsyncMock(return_value=mocked_historical_player)
-    mock_db.__getitem__.return_value = mock_cursor
+    mock_cursor.sort.return_value = mock_cursor
+    mock_cursor.limit.return_value = mock_cursor
+    mock_cursor.to_list = AsyncMock(return_value=[mocked_historical_player])
+    mock_collection.find.return_value = mock_cursor
+    mock_db.__getitem__.return_value = mock_collection
     app.dependency_overrides[get_db] = lambda: mock_db
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
-        response = await ac.get("/api/v1/historical-players/search/lamarcus-aldridge")
-        player = response.json().get("data", [])
+        response = await ac.get("/api/v1/historical-players/search?q=aldridge")
+        players = response.json().get("data", [])
         message = response.json().get("message", "")
     app.dependency_overrides.clear()
     assert response.status_code == 200
     assert message == "Player successfully retrieved."
-    assert player.get("_id") == 200746
-    assert player.get("full_name") == "LaMarcus Aldridge"
+    assert len(players) == 1
+    assert players[0].get("_id") == 200746
+    assert players[0].get("full_name") == "LaMarcus Aldridge"
+    mock_collection.find.assert_called_once_with({"$text": {"$search": "aldridge"}})
 
 
 @pytest.mark.anyio
-async def test_fail_get_historical_player_by_slug(mock_redis):
+async def test_fail_search_historical_players_by_name_not_found(mock_redis):
     mock_db = MagicMock()
+    mock_collection = MagicMock()
     mock_cursor = MagicMock()
-    mock_cursor.find_one = AsyncMock(return_value=None)
-    mock_db.__getitem__.return_value = mock_cursor
+    mock_cursor.sort.return_value = mock_cursor
+    mock_cursor.limit.return_value = mock_cursor
+    mock_cursor.to_list = AsyncMock(return_value=[])
+    mock_collection.find.return_value = mock_cursor
+    mock_db.__getitem__.return_value = mock_collection
     app.dependency_overrides[get_db] = lambda: mock_db
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
-        response = await ac.get("/api/v1/historical-players/search/lamarcuz-aldridg")
-        message = response.json().get("detail", "").get("message", "")
+        response = await ac.get("/api/v1/historical-players/search?q=lamarcuz")
+        message = response.json().get("detail", {}).get("message", "")
     app.dependency_overrides.clear()
     assert response.status_code == 404
-    assert message == "Player with slug lamarcuz-aldridg not found."
+    assert message == "No players found matching this query."
 
 
 @pytest.mark.anyio
-async def test_fail_get_historical_player_by_id_too_short():
+async def test_fail_search_historical_players_by_name_too_short():
     mock_db = MagicMock()
-    mock_cursor = MagicMock()
-    mock_cursor.find_one = AsyncMock(return_value=None)
-    mock_db.__getitem__.return_value = mock_cursor
+    mock_collection = MagicMock()
+    mock_db.__getitem__.return_value = mock_collection
     app.dependency_overrides[get_db] = lambda: mock_db
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
-        response = await ac.get("/api/v1/historical-players/search/leb")
+        response = await ac.get("/api/v1/historical-players/search?q=l")
         message = response.json().get("detail", "")[0].get("msg", "")
     app.dependency_overrides.clear()
     assert response.status_code == 422
-    assert message == "String should have at least 8 characters"
+    assert message == "String should have at least 2 characters"
