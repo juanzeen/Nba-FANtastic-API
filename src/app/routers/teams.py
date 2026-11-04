@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Path, HTTPException, Query, Depends
 from typing import Annotated
 from ..dependencies import DbDependency, RedisDependency
-
 from ..utils.cache import get_cached_or_db
 from ..utils.rate_limiter import rate_limit
+from ..utils.search import db_text_search
 from ..schemas.teams import Team
 from ..schemas.base import (
     ResponseDict,
@@ -61,6 +61,44 @@ async def get_teams(
 
 
 @router.get(
+    "/search",
+    responses={
+        404: {
+            "model": ErrorResponseDict,
+            "description": "No teams found matching this query.",
+        }
+    },
+    dependencies=[rate_limit(40, 60)],
+)
+async def search_teams_by_name(
+    q: Annotated[
+        str,
+        Query(
+            min_length=2,
+            max_length=20,
+            title="Name from the team who will be retrived.",
+        ),
+    ],
+    db: DbDependency,
+    redis: RedisDependency,
+) -> ResponseDict[list[Team]] | ErrorResponseDict:
+    tc = db["teams"]
+    normalized_query = q.strip().lower()
+    cache_key = f"teams:search:{normalized_query}"
+    team = await get_cached_or_db(
+        redis, cache_key, db_text_search(tc, normalized_query), 7200
+    )
+    if team:
+        return {
+            "message": f"Teams successfully retrieved.",
+            "data": team,
+        }
+    raise HTTPException(
+        status_code=404, detail={"message": f"No teams found matching this query."}
+    )
+
+
+@router.get(
     "/{id}",
     status_code=200,
     responses={
@@ -93,38 +131,3 @@ async def get_team_by_id(
     raise HTTPException(
         status_code=404, detail={"message": f"Team with id {id} not found."}
     )
-
-
-@router.get(
-    "/search/{abb}/",
-    responses={
-        404: {
-            "model": ErrorResponseDict,
-            "description": "Team with abbreviation XXX not found.",
-        }
-    },
-    dependencies=[rate_limit(60, 60)],
-)
-async def get_team_by_abbreviation(
-    abb: Annotated[
-        str,
-        Path(
-            max_length=3,
-            min_length=3,
-            title="Abbreviation from the team which'll be retrieved.",
-        ),
-    ],
-    db: DbDependency,
-    redis: RedisDependency,
-) -> ResponseDict[Team] | ErrorResponseDict:
-    tc = db["teams"]
-    cache_key = f"teams:abb:{abb.upper()}"
-    team = await get_cached_or_db(
-        redis, cache_key, tc.find_one({"abbreviation": abb}), 7200
-    )
-    if team:
-        return {
-            "message": f"Team {abb} successfully retrieved.",
-            "data": team,
-        }
-    raise HTTPException(status_code=404, detail={"message": f"Team {abb} not found."})

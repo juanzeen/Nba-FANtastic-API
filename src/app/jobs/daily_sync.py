@@ -387,7 +387,7 @@ async def sync_players(
                 "opponent": opponent,
                 "result": str(row["WL"]),
                 "is_home": is_home,
-                "is_playoffs": False,
+                "playoffs": False,
                 "minutes": str(row["MIN"]),
                 "pts": int(row["PTS"]),
                 "ast": int(row["AST"]),

@@ -532,50 +532,60 @@ async def test_fail_get_team_by_id_not_integer():
 
 
 @pytest.mark.anyio
-async def test_get_team_by_abbreviation():
+async def test_search_teams_by_name(mock_redis):
     mock_db = MagicMock()
     mock_collection = MagicMock()
-    mock_collection.find_one = AsyncMock(return_value=mocked_team_1)
+    mock_cursor = MagicMock()
+    mock_cursor.sort.return_value = mock_cursor
+    mock_cursor.limit.return_value = mock_cursor
+    mock_cursor.to_list = AsyncMock(return_value=[mocked_team_1])
+    mock_collection.find.return_value = mock_cursor
     mock_db.__getitem__.return_value = mock_collection
     app.dependency_overrides[get_db] = lambda: mock_db
 
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
-        response = await ac.get("/api/v1/teams/search/ATL/")
+        response = await ac.get("/api/v1/teams/search?q=hawks")
         data = response.json().get("data", None)
         message = response.json().get("message", None)
     app.dependency_overrides.clear()
 
     assert response.status_code == 200
-    assert message == "Team ATL successfully retrieved."
+    assert message == "Teams successfully retrieved."
     assert data is not None
-    assert data["_id"] == 1610612737
-    assert data["abbreviation"] == "ATL"
-    assert data["name"] == "Atlanta Hawks"
+    assert len(data) == 1
+    assert data[0]["_id"] == 1610612737
+    assert data[0]["abbreviation"] == "ATL"
+    assert data[0]["name"] == "Atlanta Hawks"
+    mock_collection.find.assert_called_once_with({"$text": {"$search": "hawks"}})
 
 
 @pytest.mark.anyio
-async def test_fail_get_team_by_abbreviation_not_found():
+async def test_fail_search_teams_by_name_not_found(mock_redis):
     mock_db = MagicMock()
     mock_collection = MagicMock()
-    mock_collection.find_one = AsyncMock(return_value=None)
+    mock_cursor = MagicMock()
+    mock_cursor.sort.return_value = mock_cursor
+    mock_cursor.limit.return_value = mock_cursor
+    mock_cursor.to_list = AsyncMock(return_value=[])
+    mock_collection.find.return_value = mock_cursor
     mock_db.__getitem__.return_value = mock_collection
     app.dependency_overrides[get_db] = lambda: mock_db
 
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
-        response = await ac.get("/api/v1/teams/search/XYZ/")
+        response = await ac.get("/api/v1/teams/search?q=xyz")
         message = response.json().get("detail", {}).get("message", None)
     app.dependency_overrides.clear()
 
     assert response.status_code == 404
-    assert message == "Team XYZ not found."
+    assert message == "No teams found matching this query."
 
 
 @pytest.mark.anyio
-async def test_fail_get_team_by_abbreviation_too_short():
+async def test_fail_search_teams_by_name_too_short():
     mock_db = MagicMock()
     mock_collection = MagicMock()
     mock_db.__getitem__.return_value = mock_collection
@@ -584,7 +594,7 @@ async def test_fail_get_team_by_abbreviation_too_short():
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
-        response = await ac.get("/api/v1/teams/search/AT/")
+        response = await ac.get("/api/v1/teams/search?q=a")
         detail = response.json().get("detail", [])
     app.dependency_overrides.clear()
 
@@ -593,7 +603,7 @@ async def test_fail_get_team_by_abbreviation_too_short():
 
 
 @pytest.mark.anyio
-async def test_fail_get_team_by_abbreviation_too_long():
+async def test_fail_search_teams_by_name_too_long():
     mock_db = MagicMock()
     mock_collection = MagicMock()
     mock_db.__getitem__.return_value = mock_collection
@@ -602,7 +612,7 @@ async def test_fail_get_team_by_abbreviation_too_long():
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
-        response = await ac.get("/api/v1/teams/search/ATLA/")
+        response = await ac.get("/api/v1/teams/search?q=this_team_name_is_way_too_long")
         detail = response.json().get("detail", [])
     app.dependency_overrides.clear()
 
